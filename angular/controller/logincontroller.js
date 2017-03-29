@@ -91,5 +91,4 @@ function ($rootScope,$scope, $location, $window,authService,focus,$cordovaDevice
             $scope.disableInput     = false; 
         });
     }
-
 }]);

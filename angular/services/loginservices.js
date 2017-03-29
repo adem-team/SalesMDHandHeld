@@ -133,7 +133,6 @@ myAppModule.factory('authService', ["$http","$q","$window","sweet","$rootScope",
                     var rulename    = response.passwordvalidation.rule_nm;
                     var accessid    = response.passwordvalidation.accessid;
                     var uuid        = response.passwordvalidation.uuid;
-                    
                     if(statuslogin == "false" || statuslogin == false)
                     {
                         deferred.reject("password_salah");
@@ -231,6 +230,37 @@ myAppModule.factory('authService', ["$http","$q","$window","sweet","$rootScope",
         return deferred.promise;
     }
 
+    var getManagers = function(username,password,autouuid)
+    {
+        var autouuid = autouuid;
+        var urla = geturl();
+
+        var deferred = $q.defer();
+
+        var urluuid = "http://api.lukisongroup.com/login/uuids/search?POSITION_ACCESS=1";
+        $http.get(urluuid)
+        .success(function(response,status, headers, config) 
+        {
+            if(angular.isDefined(response.statusCode))
+            {
+               if(response.statusCode == 404)
+                {
+                    deferred.resolve([]);
+                }
+            }
+            else
+            {
+                deferred.resolve(response.user); 
+            }
+        })
+        .error(function(err)
+        {
+            deferred.reject("username_salah");
+        });
+
+
+        return deferred.promise;
+    }
 	function getUserInfo() 
 	{
         return userInfo;
@@ -245,5 +275,5 @@ myAppModule.factory('authService', ["$http","$q","$window","sweet","$rootScope",
     }
     init();
 
-	return{login:login,getUserInfo:getUserInfo,loginwithuuid:loginwithuuid}
+	return{login:login,getUserInfo:getUserInfo,loginwithuuid:loginwithuuid,getManagers:getManagers}
 }]);
