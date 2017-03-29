@@ -20,7 +20,7 @@ function($rootScope,$http, $q, $filter, $window,LocationService)
         $http.get(url + "/detailkunjungans/"+ ID_DETAIL)
         .success(function(data,status,headers,config) 
         {
-            if(data.CHECKIN_TIME == null || data.CHECKIN_TIME == '')
+            if(data.CHECKIN_TIME == null || data.CHECKIN_TIME == '' || data.CHECKIN_TIME == '0000-00-00 00:00:00')
             {
                 var result              = $rootScope.seriliazeobject(detail);
                 var serialized          = result.serialized;
@@ -56,29 +56,42 @@ function($rootScope,$http, $q, $filter, $window,LocationService)
         var url = getUrl();
         var deferred = $q.defer();
         $http.get(url + "/statuskunjungans/search?ID_DETAIL=" + ID_DETAIL)
-        .success(function(data,status, headers, config) 
+        .success(function (response,status, headers, config) 
         {
-            deferred.resolve(data);
-        })
-        .error(function(err,status)
-        {
-            if (status === 404)
+            if(angular.isDefined(headers()['last-modified']))
             {
-                var result              = $rootScope.seriliazeobject(statuskunjungan);
-                var serialized          = result.serialized;
-                var config              = result.config;
-
-                $http.post(url + "/statuskunjungans",serialized,config)
-                .success(function(data,status, headers, config) 
+                alert("Dari Cache");
+                console.log("Update Status Check In");
+            }
+            else
+            {
+                if(angular.isDefined(response.statusCode))
                 {
-                    deferred.resolve(data);
-                });
-            }
-            else    
-            {
-                deferred.reject(err);
-            }
+                   if(response.statusCode == 404)
+                    {
+                        var result              = $rootScope.seriliazeobject(statuskunjungan);
+                        var serialized          = result.serialized;
+                        var config              = result.config;
 
+                        $http.post(url + "/statuskunjungans",serialized,config)
+                        .success(function(data,status, headers, config) 
+                        {
+                            data.StatusAda = "BelumAda";
+                            deferred.resolve(data);
+                        });
+                    } 
+                }
+                else
+                {
+                    response.StatusAda = "SudahAda";
+                    deferred.resolve(response);
+                }    
+            }
+              
+        })
+        .error(function (error)
+        {
+            deferred.reject(error);
         });
         return deferred.promise;
     }
@@ -87,10 +100,18 @@ function($rootScope,$http, $q, $filter, $window,LocationService)
     {
         var url = getUrl();
         var deferred = $q.defer();
-        $http.get(url + "/statuskunjungans/search?TGL=" + tanggalplan + "&&USER_ID=" + auth + "&&CHECK_IN=1" + "&&CHECK_OUT=0")
-        .success(function(data,status, headers, config) 
+        $http.get(url + "/statuskunjungans/search?TGL=" + tanggalplan + "&USER_ID=" + auth + "&CHECK_IN=1" + "&CHECK_OUT=0")
+        .success(function(response,status, headers, config) 
         {
-            deferred.resolve(data);
+            if(angular.isDefined(response.statusCode))
+            {
+                deferred.resolve([]);
+            }
+            else
+            {
+              deferred.resolve(response.StatusKunjungan[0]);  
+            }
+            
         })
         .error(function(err,status)
         {

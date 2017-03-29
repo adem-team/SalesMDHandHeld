@@ -1,10 +1,9 @@
-myAppModule.controller("DetailAgendaController", ["$rootScope","$scope", "$location","$http","auth","$window","SummaryService","NgMap","LocationService","$filter","sweet","$routeParams","$timeout","JadwalKunjunganService","singleapiService","configurationService","AbsensiService","LastVisitService","CheckInService","resolvegpslocation","resolveabsensi",
-function ($rootScope,$scope, $location, $http,auth,$window,SummaryService,NgMap,LocationService,$filter,sweet,$routeParams,$timeout,JadwalKunjunganService,singleapiService,configurationService,AbsensiService,LastVisitService,CheckInService,resolvegpslocation,resolveabsensi)
+myAppModule.controller("DetailAgendaController", ["$rootScope","$scope", "$location","$http","auth","$window","SummaryService","NgMap","LocationService","$filter","sweet","$routeParams","$timeout","JadwalKunjunganService","singleapiService","configurationService","LastVisitService","CheckInService","absen","agenda",
+function ($rootScope,$scope, $location, $http,auth,$window,SummaryService,NgMap,LocationService,$filter,sweet,$routeParams,$timeout,JadwalKunjunganService,singleapiService,configurationService,LastVisitService,CheckInService,absen,agenda)
 {
     $scope.userInfo = auth;
     $scope.loading  = true;
     var idsalesman = auth.id;
-
     $scope.data = 
     {
       selectedIndex: 0,
@@ -21,7 +20,6 @@ function ($rootScope,$scope, $location, $http,auth,$window,SummaryService,NgMap,
     }
     var tanggalsekarang = $filter('date')(new Date(),'yyyy-MM-dd');
     var tanggalplan     = $routeParams.idtanggal;
-    $scope.viewtanggal = tanggalplan;
 
     if(tanggalsekarang == tanggalplan)
     {
@@ -32,158 +30,233 @@ function ($rootScope,$scope, $location, $http,auth,$window,SummaryService,NgMap,
         $scope.activehistory = "active";
     }
 
-
-    if(resolveabsensi.length == 0)
+                
+    var geocoder = new google.maps.Geocoder;
+    LocationService.GetGpsLocation()
+    .then(function(data)
     {
-        alert("Tolong Lakukan Absensi Terlebih Dahulu");
-        $location.path('/absensi');
-    }
-    else
-    {
-        var geocoder = new google.maps.Geocoder;
-        LocationService.GetGpsLocation()
-        .then(function(data)
-        {
-            $scope.gpslat   = data.latitude;
-            $scope.gpslong  = data.longitude;
-        });
+        $scope.datagpslocation = data;
+        $scope.gpslat   = data.latitude;
+        $scope.gpslong  = data.longitude;
+    });
 
-        JadwalKunjunganService.GetGroupCustomerByTanggalPlan(auth,tanggalplan)
-        .then(function(data)
+    CheckInService.getCheckinStatus(tanggalplan,idsalesman)
+    .then(function (result) 
+    {
+        if(result.length == 0)
         {
-            if(data.length == 0)
+            $scope.masihcheckinid =  null; 
+        }
+        else
+        {
+            $scope.masihcheckinid =  result.ID_DETAIL;
+        }
+    });
+    
+    //###################################################### USING LOCAL STORAGE)##############################################//
+    // if(tanggalsekarang == tanggalplan)
+    // {
+    //     if(agenda)
+    //     {
+    //         if(agenda.length == 0)
+    //         {
+    //             alert("Belum Ada Jadwal Hari Ini");
+    //             $location.path('/history');
+    //         }
+    //         else
+    //         {
+    //             $scope.customers = agenda;
+    //             $scope.loading   = false;
+    //         }  
+    //     }
+    //     else
+    //     {
+    //         JadwalKunjunganService.GetGroupCustomerByTanggalPlan(auth,tanggalplan)
+    //         .then(function(response)
+    //         {
+    //             if(response.length == 0)
+    //             {
+    //                 alert("Belum Ada Jadwal Hari Ini");
+    //                 $location.path('/history');
+    //             }
+    //             else
+    //             {
+    //                 var idgroupcustomer         = response.SCDL_GROUP;
+    //                 JadwalKunjunganService.GetSingleDetailKunjunganProsedur(idsalesman,idgroupcustomer,tanggalplan)
+    //                 .then(function (result) 
+    //                 {
+    //                     $scope.customers = result;
+    //                     $scope.loading   = false;
+    //                 },
+    //                 function (error)
+    //                 {
+    //                     var forcereload = confirm("Cors Agenda Error. Reload Again");
+    //                     if (forcereload == true) 
+    //                     {
+    //                         $scope.loading   = true;
+    //                         $timeout(function()
+    //                         {
+    //                             $window.location.reload();
+    //                         },10000);
+    //                     }
+    //                     else
+    //                     {
+    //                         $scope.loading   = false;
+    //                     }
+    //                 });  
+    //             }      
+    //         });  
+    //     }
+    // }
+    // else
+    // {
+    //     JadwalKunjunganService.GetGroupCustomerByTanggalPlan(auth,tanggalplan)
+    //     .then(function(response)
+    //     {
+    //         if(response.length == 0)
+    //         {
+    //             alert("Belum Ada Jadwal Hari Ini");
+    //             $location.path('/history');
+    //         }
+    //         else
+    //         {
+    //             var idgroupcustomer         = response.SCDL_GROUP;
+    //             JadwalKunjunganService.GetSingleDetailKunjunganProsedur(idsalesman,idgroupcustomer,tanggalplan)
+    //             .then(function (result) 
+    //             {
+    //                 $scope.customers = result;
+    //                 $scope.loading   = false;
+    //             },
+    //             function (error)
+    //             {
+    //                 var forcereload = confirm("Cors Agenda Error. Reload Again");
+    //                 if (forcereload == true) 
+    //                 {
+    //                     $scope.loading   = true;
+    //                     $timeout(function()
+    //                     {
+    //                         $window.location.reload();
+    //                     },10000);
+    //                 }
+    //                 else
+    //                 {
+    //                     $scope.loading   = false;
+    //                 }
+    //             });  
+    //         }      
+    //     });  
+    // }
+
+    // ###############WITHOUT LOCAL STORAGE #####################################################//
+    JadwalKunjunganService.GetGroupCustomerByTanggalPlan(auth,tanggalplan)
+    .then(function(response)
+    {
+        if(response.length == 0)
+        {
+            alert("Belum Ada Jadwal Hari Ini");
+            $location.path('/history');
+        }
+        else
+        {
+            var idgroupcustomer         = response.SCDL_GROUP;
+            JadwalKunjunganService.GetSingleDetailKunjunganProsedur(idsalesman,idgroupcustomer,tanggalplan)
+            .then(function (result) 
             {
-                alert("Belum Ada Jadwal Hari Ini");
-                $location.path('/history');
-            }
-            else
+                $scope.customers = result;
+                $scope.loading   = false;
+            },
+            function (error)
             {
-                var idgroupcustomer         = data.JadwalKunjungan[0].SCDL_GROUP;
-                JadwalKunjunganService.GetSingleDetailKunjunganProsedur(idsalesman,idgroupcustomer,tanggalplan)
-                .then(function (result) 
+                var forcereload = confirm("Cors Agenda Error. Reload Again");
+                if (forcereload == true) 
                 {
-                    $scope.customers = result;
+                    $scope.loading   = true;
+                    $timeout(function()
+                    {
+                        $window.location.reload();
+                    },10000);
+                }
+                else
+                {
                     $scope.loading   = false;
-                });  
-            }      
-        });
+                }
+            });  
+        }      
+    });
 
-        $scope.detailjadwalkunjungan = function(customer)
+    $scope.detailjadwalkunjungan = function(customer)
+    {
+        if(tanggalplan < tanggalsekarang)
         {
-            if(tanggalplan < tanggalsekarang)
+            alert("Tidak Bisa Lagi Check In");
+        }
+        else if(tanggalplan > tanggalsekarang)
+        {
+            alert("Belum Bisa Check In");
+        }
+        else if(tanggalplan == tanggalsekarang)
+        {
+            if(absen)
             {
-                alert("Tidak Bisa Lagi Check In");
-            }
-            else if(tanggalplan > tanggalsekarang)
-            {
-                alert("Belum Bisa Check In");
-            }
-            else if(tanggalplan == tanggalsekarang)
-            {
-
-                var resultabsen = resolveabsensi.Salesmanabsensi[0];
-                if(resultabsen.STATUS == 0)
+                if(absen.AbsenKeluar == 0)
                 {
-                    if(customer.CHECKOUT == 1)
+                    if(customer.CHECK_OUT == 1 || customer.CHECK_OUT == "1")
                     {
                         alert("Kamu Sudah Check Out");
                     }
                     else
                     {
-                        var lanjutcheckin = confirm("Yakin Check In Di Customer?" + customer.CUST_NM);
+                        var lanjutcheckin = confirm("Yakin Check In Di Customer " + customer.CUST_NM +"?");
                         if (lanjutcheckin == true) 
                         {
-                            var detailkunjunganid = customer.ID;
-                            singleapiService.singledetailkunjunganbyiddetail(detailkunjunganid)
-                            .then (function (response)
+                            if($window.localStorage.getItem('LocalStorageChekIn'))
                             {
-                                var custlat  = response.DetailKunjungan[0].MAP_LAT;
-                                var custlong = response.DetailKunjungan[0].MAP_LNG;
-
-                                if(resolvegpslocation.statusgps == "EC:1")
+                                var LocalStorageChekIn = JSON.parse($window.localStorage.getItem('LocalStorageChekIn'));
+                                if(LocalStorageChekIn.iddetailkunjungan != customer.ID)
                                 {
-                                    alert("GPS Tidak Hidup");
+                                    alert("Dilarang Double Check In");
                                 }
-                                else if(resolvegpslocation.statusgps == "EC:2")
+                                else
                                 {
-                                    alert("Lokasi Tidak Tersedia");
+                                    $location.path('/detailjadwalkunjungan/'+ customer.ID);
                                 }
-                                else if(resolvegpslocation.statusgps == "EC:3")
+                            }
+                            else
+                            {
+                                if($scope.masihcheckinid != null)
                                 {
-                                    alert("GPS Time OUt");
-                                }
-                                else if(resolvegpslocation.statusgps == "EC:3")
-                                {
-                                    alert("Masalah Unknown");
-                                }
-
-                                $scope.googlemaplat     = resolvegpslocation.latitude;    //get from gps
-                                $scope.googlemaplong    = resolvegpslocation.longitude;
-
-                                var longitude1     = $scope.googlemaplat;
-                                var latitude1      = $scope.googlemaplong;
-
-                                var longitude2     = custlat;
-                                var latitude2      = custlong;
-
-                                var jarak = $rootScope.jaraklokasi(longitude1,latitude1,longitude2,latitude2);
-                                configurationService.getConfigRadius()
-                                .then(function (response) 
-                                {
-                                    var configjarak = response.Configuration[3].value;
-                                    if(jarak > configjarak)
+                                    if($scope.masihcheckinid == customer.ID)
                                     {
-                                        alert("Di Luar Radius");
+                                        $location.path('/detailjadwalkunjungan/'+ customer.ID);
                                     }
                                     else
                                     {
-                                        CheckInService.getCheckinStatus(tanggalplan,idsalesman)
-                                        .then(function (result) 
-                                        {
-                                            if(result.length != 0)
-                                            {
-                                                $scope.loading   = false;
-                                                var IDDETAILSCDL = customer.ID;
-                                                var IDDETAILSTS  = result.StatusKunjungan[0].ID_DETAIL;
-                                                if(IDDETAILSCDL == IDDETAILSTS)
-                                                {
-                                                    $location.path('/detailjadwalkunjungan/'+ detailkunjunganid);
-                                                }
-                                                else
-                                                {
-                                                    alert("Double Check In Dilarang");
-                                                }  
-                                            }
-                                            else
-                                            {
-                                                $location.path('/detailjadwalkunjungan/'+ detailkunjunganid);
-                                            } 
-                                        });
-                                        
-                                    }
-                                },
-                                function (err)
+                                        alert("Double Checkin Dilarang");
+                                    } 
+                                }
+                                else
                                 {
-                                    alert("Configuration Radius Error");
-                                });  
-                            });
+                                    $location.path('/detailjadwalkunjungan/'+ customer.ID);
+                                }    
+                            } 
                         }  
                     }
                 }
-                else if(resultabsen.STATUS == 1)
+                else if(absen.AbsenKeluar == 1)
                 {
                     alert("Sudah Absen Keluar");
-                }       
-            }
-        }  
-    }
+                }  
+            }         
+        }
+    } 
+
     $scope.summaryall = function()
     {
         $scope.loading = true;
         JadwalKunjunganService.GetGroupCustomerByTanggalPlan(auth,tanggalplan)
         .then(function(data)
         {
-            var idgroupcustomer         = data.JadwalKunjungan[0].SCDL_GROUP;
+            var idgroupcustomer         = data.SCDL_GROUP;
             SummaryService.datasummaryall(idsalesman,tanggalplan,idgroupcustomer)
             .then(function (result) 
             {
@@ -206,7 +279,7 @@ function ($rootScope,$scope, $location, $http,auth,$window,SummaryService,NgMap,
         JadwalKunjunganService.GetGroupCustomerByTanggalPlan(auth,tanggalplan)
         .then(function(data)
         {
-            var idgroupcustomer         = data.JadwalKunjungan[0].SCDL_GROUP;
+            var idgroupcustomer         = data.SCDL_GROUP;
             LastVisitService.LastVisitSummaryAll(tanggalplan,idgroupcustomer)
             .then(function (result) 
             {
@@ -222,5 +295,5 @@ function ($rootScope,$scope, $location, $http,auth,$window,SummaryService,NgMap,
             });
         });
     };
-    
+ 
 }]);

@@ -1,10 +1,10 @@
 'use strict';
 myAppModule.config(['$routeProvider', function($routeProvider,$authProvider)
 {
-    $routeProvider.when('/history',
+    $routeProvider.when('/absensi',
     {
-        templateUrl : 'angular/partial/salesman/history.html',
-        controller  : 'HistoryController',
+        templateUrl : 'angular/partial/salesman/absensi.html',
+        controller  : 'AbsensiController',
         resolve: 
         {
             auth: function ($q, authService,$location) 
@@ -26,23 +26,203 @@ myAppModule.config(['$routeProvider', function($routeProvider,$authProvider)
                     $location.path('/');
                 }
             },
-            historyresolve: function($q,JadwalKunjunganService,authService)
+            absen: function ($q, AbsensiService,$location,$filter) 
             {
-                var userInfo        = authService.getUserInfo();
-                var resolvehistory  = JadwalKunjunganService.GetListHistory(userInfo);
-                if(resolvehistory)
+                var LocalStorageAbsensi = AbsensiService.getLocalStorageAbsensi();
+                if(LocalStorageAbsensi)
                 {
-                    return $q.when(resolvehistory);
+                   var tglhariini = $filter('date')(new Date(),'yyyy-MM-dd');
+                   if (LocalStorageAbsensi.AbsenTanggal == tglhariini) 
+                    {
+                        return $q.when(LocalStorageAbsensi);
+                    }
+                    else
+                    {
+                        $location.path('/absensi');
+                    } 
+                }
+                else 
+                {
+                    $location.path('/absensi');
+                }
+            }
+        }
+    });
+
+    $routeProvider.when('/agenda/:idtanggal',
+    {
+        templateUrl : 'angular/partial/salesman/agenda.html',
+        controller  : 'DetailAgendaController',
+        resolve: 
+        {
+            auth: function ($q, authService,$location) 
+            {
+                var userInfo = authService.getUserInfo();
+                if(userInfo)
+                {
+                   if (userInfo.rulename === 'SALESMAN') 
+                    {
+                        return $q.when(userInfo);
+                    }
+                    else
+                    {
+                        $location.path('/error/404');
+                    } 
+                }
+                else 
+                {
+                    $location.path('/');
                 }
             },
-            resolveabsensi: function ($q,AbsensiService,authService,$filter) 
+            ResolveIdGroupCustomer: function (authService,JadwalKunjunganService,$route) 
             {
+                var tanggalplan             = $route.current.params.idtanggal;
                 var userInfo                = authService.getUserInfo();
-                var tglhariini              = $filter('date')(new Date(),'yyyy-MM-dd');
-                var resolveabsensi          = AbsensiService.getAbsensi(userInfo,tglhariini);
-                if(resolveabsensi)
+                return JadwalKunjunganService.GetGroupCustomerByTanggalPlan(userInfo,tanggalplan);
+            },
+            absen: function ($q, AbsensiService,$location,$filter) 
+            {
+                var LocalStorageAbsensi = AbsensiService.getLocalStorageAbsensi();
+                if(LocalStorageAbsensi)
                 {
-                    return $q.when(resolveabsensi);
+                   var tglhariini = $filter('date')(new Date(),'yyyy-MM-dd');
+                   if (LocalStorageAbsensi.AbsenTanggal == tglhariini) 
+                    {
+                        return $q.when(LocalStorageAbsensi);
+                    }
+                    else
+                    {
+                        alert("Absen Terlebih Dahulu");
+                        $location.path('/absensi');
+                    } 
+                }
+                else 
+                {
+                    alert("Absen Terlebih Dahulu");
+                    $location.path('/absensi');
+                }
+            },
+            agenda: function ($q, JadwalKunjunganService) 
+            {
+                var LocalStorageAgenda = JadwalKunjunganService.getLocalStorageAgenda();
+                if(LocalStorageAgenda)
+                {
+                    return $q.when(LocalStorageAgenda.LSListAgenda);
+                }
+            }
+        }
+    });
+
+    $routeProvider.when('/history',
+    {
+        templateUrl : 'angular/partial/salesman/history.html',
+        controller  : 'HistoryController',
+        resolve: 
+        {
+            auth: function ($q,authService,$location) 
+            {
+                var userInfo = authService.getUserInfo();
+                if(userInfo)
+                {
+                   if (userInfo.rulename === 'SALESMAN') 
+                    {
+                        return $q.when(userInfo);
+                    }
+                    else
+                    {
+                        $location.path('/error/404');
+                    } 
+                }
+                else 
+                {
+                    $location.path('/');
+                }
+            },
+            history: function ($q,JadwalKunjunganService) 
+            {
+                var LSListHistory = JadwalKunjunganService.getLocalStorageHistory();
+                if(LSListHistory)
+                {
+                    return $q.when(LSListHistory.LSListHistory);    
+                }
+            },
+            absen: function ($q, AbsensiService,$location,$filter) 
+            {
+                var LocalStorageAbsensi = AbsensiService.getLocalStorageAbsensi();
+                if(LocalStorageAbsensi)
+                {
+                   var tglhariini = $filter('date')(new Date(),'yyyy-MM-dd');
+                   if (LocalStorageAbsensi.AbsenTanggal == tglhariini) 
+                    {
+                        return $q.when(LocalStorageAbsensi);
+                    }
+                    else
+                    {
+                        alert("Absen Terlebih Dahulu");
+                        $location.path('/absensi');
+                    } 
+                }
+                else 
+                {
+                    alert("Absen Terlebih Dahulu");
+                    $location.path('/absensi');
+                }
+            }
+        }
+    });
+
+    $routeProvider.when('/detailjadwalkunjungan/:iddetailkunjungan',
+    {
+        templateUrl : 'angular/partial/salesman/detailjadwalkunjungan.html',
+        controller  : 'DetailJadwalKunjunganController',
+        resolve: 
+        {
+            auth: function ($q, authService,$location) 
+            {
+                var userInfo = authService.getUserInfo();
+                if(userInfo)
+                {
+                   if (userInfo.rulename === 'SALESMAN') 
+                    {
+                        return $q.when(userInfo);
+                    }
+                    else
+                    {
+                        $location.path('/error/404');
+                    } 
+                }
+                else 
+                {
+                    $location.path('/');
+                }
+            },
+            resolvegpslocation: function (LocationService) 
+            {
+                var resolvegpslocation = LocationService.GetGpsLocation();
+                return resolvegpslocation;
+            },
+            resolvesingledetailkunjunganbyiddetail: function (singleapiService,$route) 
+            {
+                var iddetailkunjungan             = $route.current.params.iddetailkunjungan;
+                var resolvesingledetailkunjunganbyiddetail = singleapiService.singledetailkunjunganbyiddetail(iddetailkunjungan);
+                return resolvesingledetailkunjunganbyiddetail;
+            },
+            resolvedatabarangall: function(ProductService)
+            {
+                var resolvedatabarang = ProductService.GetDataBarangs();
+                return resolvedatabarang;
+            },
+            resolveconfigradius: function($q,configurationService)
+            {
+                var resolveconfigradius = configurationService.getConfigRadius();
+                return resolveconfigradius;
+            },
+            agenda: function ($q, JadwalKunjunganService) 
+            {
+                var LocalStorageAgenda = JadwalKunjunganService.getLocalStorageAgenda();
+                if(LocalStorageAgenda)
+                {
+                    return $q.when(LocalStorageAgenda.LSListAgenda);
                 }
             }
         }
@@ -104,53 +284,6 @@ myAppModule.config(['$routeProvider', function($routeProvider,$authProvider)
         }
     });
 
-    $routeProvider.when('/absensi',
-    {
-        templateUrl : 'angular/partial/salesman/absensi.html',
-        controller  : 'AbsensiController',
-        resolve: 
-        {
-            auth: function ($q, authService,$location) 
-            {
-                var userInfo = authService.getUserInfo();
-                if(userInfo)
-                {
-                   if (userInfo.rulename === 'SALESMAN') 
-                    {
-                        return $q.when(userInfo);
-                    }
-                    else
-                    {
-                        $location.path('/error/404');
-                    } 
-                }
-                else 
-                {
-                    $location.path('/');
-                }
-            },
-            resolvegpslocation: function ($q,LocationService) 
-            {
-                var resolvegpslocation = LocationService.GetGpsLocation();
-                if(resolvegpslocation)
-                {
-                    return $q.when(resolvegpslocation);
-                }
-            },
-            resolveabsensi: function ($q,AbsensiService,authService,$filter) 
-            {
-                var userInfo                = authService.getUserInfo();
-                var tglhariini              = $filter('date')(new Date(),'yyyy-MM-dd');
-                var resolveabsensi = AbsensiService.getAbsensi(userInfo,tglhariini);
-                if(resolveabsensi)
-                {
-                    return $q.when(resolveabsensi);
-                }
-            }
-
-        }
-    });
-
     $routeProvider.when('/setposition',
     {
         templateUrl : 'angular/partial/salesman/setposition.html',
@@ -178,6 +311,7 @@ myAppModule.config(['$routeProvider', function($routeProvider,$authProvider)
             }
         }
     });
+
     $routeProvider.when('/salestrack',
     {
         templateUrl : 'angular/partial/salesman/salestrack.html',
@@ -205,6 +339,7 @@ myAppModule.config(['$routeProvider', function($routeProvider,$authProvider)
             }
         }
     });
+
     $routeProvider.when('/salestrack/:idsalesman',
     {
         templateUrl : 'angular/partial/salesman/salestrackperuser.html',
@@ -232,6 +367,7 @@ myAppModule.config(['$routeProvider', function($routeProvider,$authProvider)
             }
         }
     });
+
     $routeProvider.when('/detailcustomer/:idcustomer/:idtanggal',
     {
         templateUrl : 'angular/partial/salesman/detailcustomer.html',
@@ -260,55 +396,6 @@ myAppModule.config(['$routeProvider', function($routeProvider,$authProvider)
         }
     });
     
-    $routeProvider.when('/agenda/:idtanggal',
-    {
-        templateUrl : 'angular/partial/salesman/agenda.html',
-        controller  : 'DetailAgendaController',
-        resolve: 
-        {
-            auth: function ($q, authService,$location) 
-            {
-                var userInfo = authService.getUserInfo();
-                if(userInfo)
-                {
-                   if (userInfo.rulename === 'SALESMAN') 
-                    {
-                        return $q.when(userInfo);
-                    }
-                    else
-                    {
-                        $location.path('/error/404');
-                    } 
-                }
-                else 
-                {
-                    $location.path('/');
-                }
-            },
-            ResolveIdGroupCustomer: function (authService,JadwalKunjunganService,$route) 
-            {
-                var tanggalplan             = $route.current.params.idtanggal;
-                var userInfo                = authService.getUserInfo();
-                return JadwalKunjunganService.GetGroupCustomerByTanggalPlan(userInfo,tanggalplan);
-            },
-            resolvegpslocation: function (LocationService) 
-            {
-                var resolvegpslocation = LocationService.GetGpsLocation();
-                return resolvegpslocation;
-            },
-            resolveabsensi: function ($q,AbsensiService,authService,$filter) 
-            {
-                var userInfo                = authService.getUserInfo();
-                var tglhariini              = $filter('date')(new Date(),'yyyy-MM-dd');
-                var resolveabsensi = AbsensiService.getAbsensi(userInfo,tglhariini);
-                if(resolveabsensi)
-                {
-                    return $q.when(resolveabsensi);
-                }
-            }  
-        }
-    });
-
     $routeProvider.when('/outcase',
     {
         templateUrl : 'angular/partial/salesman/outcase.html',
@@ -336,8 +423,6 @@ myAppModule.config(['$routeProvider', function($routeProvider,$authProvider)
             }
         }
     });
-
-    
 
     $routeProvider.when('/detailjadwalkunjungan/:iddetailkunjungan',
     {
@@ -402,6 +487,14 @@ myAppModule.config(['$routeProvider', function($routeProvider,$authProvider)
                 var resolveconfigradius = configurationService.getConfigRadius();
                 return resolveconfigradius;
             },
+            agenda: function ($q, JadwalKunjunganService) 
+            {
+                var LocalStorageAgenda = JadwalKunjunganService.getLocalStorageAgenda();
+                if(LocalStorageAgenda)
+                {
+                    return $q.when(LocalStorageAgenda.LSListAgenda);
+                }
+            }
         }
     });
 
@@ -432,6 +525,7 @@ myAppModule.config(['$routeProvider', function($routeProvider,$authProvider)
             }
         }
     });
+    
     $routeProvider.otherwise({redirectTo:'/error/404'});
 
 }]);
