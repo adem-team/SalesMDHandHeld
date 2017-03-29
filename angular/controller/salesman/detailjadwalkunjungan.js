@@ -10,7 +10,9 @@ function ($rootScope,$scope, $location, $http, authService, auth,$window,$routeP
     status.bgcolor="bg-aqua";
     status.icon="fa fa-close bg-aqua";
     status.show = false;
-
+    $rootScope.statusbarangstockqty = status;
+    $rootScope.statusbarangsellout = status;
+    $rootScope.statusbarangsellin   = status;
     $rootScope.statusbarangexpired = status;
     $rootScope.statusstartpicture = status;
     $rootScope.statusendpicture = status;

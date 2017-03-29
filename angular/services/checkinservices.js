@@ -58,36 +58,27 @@ function($rootScope,$http, $q, $filter, $window,LocationService)
         $http.get(url + "/statuskunjungans/search?ID_DETAIL=" + ID_DETAIL)
         .success(function (response,status, headers, config) 
         {
-            if(angular.isDefined(headers()['last-modified']))
+            if(angular.isDefined(response.statusCode))
             {
-                alert("Dari Cache");
-                console.log("Update Status Check In");
+               if(response.statusCode == 404)
+                {
+                    var result              = $rootScope.seriliazeobject(statuskunjungan);
+                    var serialized          = result.serialized;
+                    var config              = result.config;
+
+                    $http.post(url + "/statuskunjungans",serialized,config)
+                    .success(function(data,status, headers, config) 
+                    {
+                        data.StatusAda = "BelumAda";
+                        deferred.resolve(data);
+                    });
+                } 
             }
             else
             {
-                if(angular.isDefined(response.statusCode))
-                {
-                   if(response.statusCode == 404)
-                    {
-                        var result              = $rootScope.seriliazeobject(statuskunjungan);
-                        var serialized          = result.serialized;
-                        var config              = result.config;
-
-                        $http.post(url + "/statuskunjungans",serialized,config)
-                        .success(function(data,status, headers, config) 
-                        {
-                            data.StatusAda = "BelumAda";
-                            deferred.resolve(data);
-                        });
-                    } 
-                }
-                else
-                {
-                    response.StatusAda = "SudahAda";
-                    deferred.resolve(response);
-                }    
-            }
-              
+                response.StatusAda = "SudahAda";
+                deferred.resolve(response);
+            }   
         })
         .error(function (error)
         {

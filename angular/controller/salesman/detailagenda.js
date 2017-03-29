@@ -39,19 +39,6 @@ function ($rootScope,$scope, $location, $http,auth,$window,SummaryService,NgMap,
         $scope.gpslat   = data.latitude;
         $scope.gpslong  = data.longitude;
     });
-
-    CheckInService.getCheckinStatus(tanggalplan,idsalesman)
-    .then(function (result) 
-    {
-        if(result.length == 0)
-        {
-            $scope.masihcheckinid =  null; 
-        }
-        else
-        {
-            $scope.masihcheckinid =  result.ID_DETAIL;
-        }
-    });
     
     //###################################################### USING LOCAL STORAGE)##############################################//
     // if(tanggalsekarang == tanggalplan)
@@ -146,8 +133,6 @@ function ($rootScope,$scope, $location, $http,auth,$window,SummaryService,NgMap,
     //         }      
     //     });  
     // }
-
-    // ###############WITHOUT LOCAL STORAGE #####################################################//
     JadwalKunjunganService.GetGroupCustomerByTanggalPlan(auth,tanggalplan)
     .then(function(response)
     {
@@ -182,6 +167,19 @@ function ($rootScope,$scope, $location, $http,auth,$window,SummaryService,NgMap,
                 }
             });  
         }      
+    });
+
+    CheckInService.getCheckinStatus(tanggalplan,idsalesman)
+    .then(function (result) 
+    {
+        if(result.length == 0)
+        {
+            $scope.masihcheckinid =  null; 
+        }
+        else
+        {
+            $scope.masihcheckinid =  result.ID_DETAIL;
+        }
     });
 
     $scope.detailjadwalkunjungan = function(customer)
@@ -237,7 +235,8 @@ function ($rootScope,$scope, $location, $http,auth,$window,SummaryService,NgMap,
                                 else
                                 {
                                     $location.path('/detailjadwalkunjungan/'+ customer.ID);
-                                }    
+                                }
+                                
                             } 
                         }  
                     }
@@ -295,5 +294,5 @@ function ($rootScope,$scope, $location, $http,auth,$window,SummaryService,NgMap,
             });
         });
     };
- 
+    
 }]);
