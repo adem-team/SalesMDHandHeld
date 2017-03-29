@@ -84,15 +84,16 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
         if(response.length > 0)
 		{
             var y                   = $filter('date')(response[0].WAKTU_KELUAR,'yyyy-MM-dd HH:mm:ss');
-            if(y != undefined || y != null)
+            var dateTimeRegex       = /^(?:(?!0000)[0-9]{4}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1[0-9]|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[0-9]{2}(?:0[48]|[2468][048]|[13579][26])|(?:0[48]|[2468][048]|[13579][26])00)-02-29)\s([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/;
+            if(dateTimeRegex.test(y))
             {
                 var waktukeluar         = new Date(y);
-                var tahun = waktukeluar.getFullYear();
-                var bulan = waktukeluar.getMonth();
-                var tanggal = waktukeluar.getDate();
-                var jam     = waktukeluar.getHours();
-                var menit   = waktukeluar.getMinutes();
-                var detik   = waktukeluar.getSeconds();
+                var tahun               = waktukeluar.getFullYear();
+                var bulan               = waktukeluar.getMonth();
+                var tanggal             = waktukeluar.getDate();
+                var jam                 = waktukeluar.getHours();
+                var menit               = waktukeluar.getMinutes();
+                var detik               = waktukeluar.getSeconds();
          
                 var future = new Date(tahun,bulan,tanggal,jam,menit,detik);
                 var stopinterval = $interval(function () 
