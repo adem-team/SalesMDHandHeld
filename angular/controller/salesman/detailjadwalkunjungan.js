@@ -1,10 +1,10 @@
 //http://localhost/radumta_folder/production/crmprod/#/detailjadwalkunjungan/212
 //angular/partial/salesman/detailcustomer.html
 myAppModule.controller("DetailJadwalKunjunganController", ["$rootScope","$scope", "$location","$http","auth","$window","$routeParams","NgMap","LocationService","$cordovaCamera","$cordovaCapture","ngToast","$filter","sweet","ModalService","SummaryService","ProductService","CheckInService","CheckOutService","InventoryService","JadwalKunjunganService","GambarService","ExpiredService","$timeout","LastVisitCustomerService","SalesAktifitas","$cordovaSQLite","resolveobjectbarangsqlite","resolvesot2type","resolveagendabyidserver","SOT2Services","ExpiredSqliteServices","LamaKunjunganSqliteServices","$interval","GagalCheckSqliteServices","GagalGambarSqliteServices","configurationService","GagalActionService",
-function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,LocationService,$cordovaCamera,$cordovaCapture,ngToast,$filter,sweet,ModalService,SummaryService,ProductService,CheckInService,CheckOutService,InventoryService,JadwalKunjunganService,GambarService,ExpiredService,$timeout,LastVisitCustomerService,SalesAktifitas,$cordovaSQLite,resolveobjectbarangsqlite,resolvesot2type,resolveagendabyidserver,SOT2Services,ExpiredSqliteServices,LamaKunjunganSqliteServices,$interval,GagalCheckSqliteServices,GagalGambarSqliteServices,configurationService,GagalActionService)
+function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,LocationService,$cordovaCamera,$cordovaCapture,ngToast,$filter,sweet,ModalService,SummaryService,ProductService,CheckInService,CheckOutService,InventoryService,JadwalKunjunganService,GambarService,ExpiredService,$timeout,LastVisitCustomerService,SalesAktifitas,$cordovaSQLite,resolveobjectbarangsqlite,resolvesot2type,resolveagendabyidserver,SOT2Services,ExpiredSqliteServices,LamaKunjunganSqliteServices,$interval,GagalCheckSqliteServices,GagalGambarSqliteServices,configurationService,GagalActionService) 
 {
+    $scope.buttoncountdown    = true;
     var url = $rootScope.linkurl;
-	$scope.buttoncountdown    = true;
     configurationService.getConfigRadius()
     .then(function (response)
     {
@@ -19,7 +19,7 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
     function(error)
     {
         console.log("Config Radius Error");
-    });
+    });         
 
     var statusaction={};
     statusaction.bgcolor="bg-aqua";
@@ -32,8 +32,8 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
     $scope.statusmessageskunjungan  = statusaction;
 
     $scope.userInfo = auth;
-    $scope.logout = function ()
-    {
+    $scope.logout = function () 
+    { 
         $scope.userInfo = null;
         $window.sessionStorage.clear();
         window.location.href = "index.html";
@@ -73,55 +73,68 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
     var latitudecustomer                = DEFAULT_CUST_LAT;
 
     var jarak = $rootScope.jaraklokasi($scope.googlemaplong,$scope.googlemaplat,longitudecustomer,latitudecustomer);
+    if(!jarak)
+    {
+        jarak = 0;
+    }
     // ####################GET FROM SQLITE LAMA KUNJUNGAN
     LamaKunjunganSqliteServices.getLamaKunjungan(ID_DETAIL)
     .then (function (response)
     {
         if(response.length > 0)
 		{
-	    	var x                   = response[0].WAKTU_MASUK;
-	        var y                   = $filter('date')(response[0].WAKTU_KELUAR,'yyyy-MM-dd HH:mm:ss');
-	        var waktukeluar         = new Date(y);
-	        var tahun = waktukeluar.getFullYear();
-	        var bulan = waktukeluar.getMonth();
-	        var tanggal = waktukeluar.getDate();
-	        var jam		= waktukeluar.getHours();
-	        var menit	= waktukeluar.getMinutes();
-	        var detik	= waktukeluar.getSeconds();
-
-	        var future = new Date(tahun,bulan,tanggal,jam,menit,detik);
-	        var stopinterval = $interval(function ()
-	        {
-	            var diff;
-	            diff = Math.floor((future.getTime() - new Date().getTime()) / 1000);
-	            $scope.countdowns = $rootScope.convertwaktu(diff);
-	            if(diff < 1)
-	            {
-	                $scope.showbuttoncheckout = true;
-                    $scope.buttoncountdown    = false;
-	            	$scope.stopFight();
-	                console.log("Kamu Sudah Bisa Checkout");
-	            }
-	        }, 1000);
-	        $scope.stopFight = function()
-	        {
-	            if (angular.isDefined(stopinterval))
-	            {
-	                $interval.cancel(stopinterval);
-	                stopinterval = undefined;
-	            }
-	        };
+            var y                   = $filter('date')(response[0].WAKTU_KELUAR,'yyyy-MM-dd HH:mm:ss');
+            if(y != undefined || y != null)
+            {
+                var waktukeluar         = new Date(y);
+                var tahun = waktukeluar.getFullYear();
+                var bulan = waktukeluar.getMonth();
+                var tanggal = waktukeluar.getDate();
+                var jam     = waktukeluar.getHours();
+                var menit   = waktukeluar.getMinutes();
+                var detik   = waktukeluar.getSeconds();
+         
+                var future = new Date(tahun,bulan,tanggal,jam,menit,detik);
+                var stopinterval = $interval(function () 
+                {
+                    var diff;
+                    diff = Math.floor((future.getTime() - new Date().getTime()) / 1000);
+                    $scope.countdowns = $rootScope.convertwaktu(diff);
+                    if(diff < 1)
+                    {
+                        $scope.showbuttoncheckout = true;
+                        $scope.buttoncountdown    = false;  
+                        $scope.stopFight();
+                        console.log("Kamu Sudah Bisa Checkout");
+                    }
+                }, 1000);
+                $scope.stopFight = function() 
+                {
+                    if (angular.isDefined(stopinterval)) 
+                    {
+                        $interval.cancel(stopinterval);
+                        stopinterval = undefined;
+                    }
+                };  
+            }
+            else
+            {
+                $scope.showbuttoncheckout = true;
+                $scope.buttoncountdown    = false;  
+            }   
 		}
     	else
 		{
     		$scope.showbuttoncheckout = true;
+            $scope.buttoncountdown    = false;
 		}
     },
     function (error)
     {
         $scope.showbuttoncheckout = true;
+        $scope.buttoncountdown    = false;
         alert("Gagal Mendapatkan Lama Kunjungan Ke Database");
-    });
+    });    
     //#####################################################################################################
     // CHECK-IN FUNCTION
     //#####################################################################################################
@@ -141,7 +154,7 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
         .then(function(data)
         {
             ngToast.create('Anda Berhasil Check In');
-
+            
             var statuskunjungan = {};
             statuskunjungan.ID_DETAIL               = ID_DETAIL;
             statuskunjungan.TGL                     = PLAN_TGL_KUNJUNGAN;
@@ -155,11 +168,11 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
                 $scope.idstatuskunjunganresponse;
                 if(data.StatusAda == "SudahAda")
                 {
-                   $scope.idstatuskunjunganresponse = data.StatusKunjungan[0].ID;
+                   $scope.idstatuskunjunganresponse = data.StatusKunjungan[0].ID; 
                 }
                 else if(data.StatusAda == "BelumAda")
                 {
-                   $scope.idstatuskunjunganresponse = data.ID;
+                   $scope.idstatuskunjunganresponse = data.ID; 
                 }
             },
             function (error)
@@ -197,15 +210,16 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
 
         var queryupdateagenda = 'UPDATE Agenda SET CHECKIN_TIME = ?, STSCHECK_IN = ?, LAG = ?, LAT = ? WHERE ID_SERVER = ?';
         $cordovaSQLite.execute($rootScope.db, queryupdateagenda, [updateCHECKIN_TIME,updateSTSCHECK_IN,updateLAG,updateLAT,ID_DETAIL])
-        .then(function(result)
+        .then(function(result) 
         {
             console.log("Terimakasih. Agenda Check In Berhasil Di Update Di Local");
         },
-        function(error)
+        function(error) 
         {
             console.log("Update Agenda Check In Gagal Di Update Di Local: " + error.message);
-        });
+        });           
     };
+    
     $timeout(function()
     {
         $scope.checkin();
@@ -216,7 +230,7 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
     // ####################################################################################################
     $scope.checkstatusgambarstartendexpired = function()
     {
-        if (resolveagendabyidserver)
+        if (resolveagendabyidserver) 
         {
             var startpicturestatus          = resolveagendabyidserver.STSSTART_PIC;
             var endpicturestatus            = resolveagendabyidserver.STSEND_PIC;
@@ -234,7 +248,7 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
     SalesAktifitas.getSalesAktifitas(CUST_ID,PLAN_TGL_KUNJUNGAN,resolveobjectbarangsqlite,resolvesot2type)
     .then (function(response)
     {
-        $scope.salesaktivitas = response;
+        $scope.salesaktivitas = response; 
     },
     function (error)
     {
@@ -248,7 +262,7 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
         var idinventory = idinventorys.SO_ID;
         var titledialog = idinventorys.DIALOG_TITLE;
         var sotype      = idinventorys.ID;
-
+        
         namaproduct = barang.NM_BARANG;
         sweet.show(
         {
@@ -259,12 +273,12 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
             closeOnConfirm: true,
             animation: false,
             inputPlaceholder: 'Quantity/PCS'
-        },
-        function(inputValue)
+        }, 
+        function(inputValue) 
         {
             if(/^\d+$/.test(inputValue))
             {
-
+                
             }
             else
             {
@@ -281,7 +295,7 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
                 sweet.showInputError('Ini Harus Diisi Dan Harus Angka!');
                 return false;
             }
-
+            
             else
             {
                 $scope.loadingcontent = true;
@@ -300,13 +314,13 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
                 }
                 else
                 {
-                   detail.SO_QTY                   = inputValue;
+                   detail.SO_QTY                   = inputValue; 
                 }
                 detail.ID_GROUP                 = ID_GROUP;
                 detail.WAKTU_INPUT_INVENTORY    = $filter('date')(new Date(),'yyyy-MM-dd HH:mm:ss');
 
                 InventoryService.setInventoryAction(detail)
-                .then(function (result)
+                .then(function (result) 
                 {
                     sweet.show({
                                     title: 'Saved',
@@ -332,11 +346,11 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
 
                     var queryinsertsot2 = 'INSERT INTO Sot2 (ISON_SERVER,TGL,CUST_KD,CUST_NM,KD_BARANG,NM_BARANG,SO_QTY,SO_TYPE,POS,USER_ID,STATUS,WAKTU_INPUT_INVENTORY,ID_GROUP,DIALOG_TITLE) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
                     $cordovaSQLite.execute($rootScope.db,queryinsertsot2,[newISON_SERVER,newTGL,newCUST_KD,newCUST_NM,newKD_BARANG,newNM_BARANG,newSO_QTY,newSO_TYPE,newPOS,newUSER_ID,newSTATUS,newWAKTU_INPUT_INVENTORY,newID_GROUP,newDIALOG_TITLE])
-                    .then(function(result)
+                    .then(function(result) 
                     {
                         console.log("SOT2 Berhasil Disimpan Di Local!");
-                    },
-                    function(error)
+                    }, 
+                    function(error) 
                     {
                         console.log("SOT2 Gagal Disimpan Ke Local: " + error.message);
                     });
@@ -367,11 +381,11 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
 
                         var queryupdateagenda = 'UPDATE Agenda SET STS' + titledialog + ' = ? WHERE ID_SERVER = ?';
                         $cordovaSQLite.execute($rootScope.db, queryupdateagenda, [1,ID_DETAIL])
-                        .then(function(result)
+                        .then(function(result) 
                         {
                             console.log("Terimakasih. Agenda Status " + titledialog + " Berhasil Di Update Di Local");
                         },
-                        function(error)
+                        function(error) 
                         {
                             console.log("Error. Agenda Status " + titledialog + " Gagal Di Update Di Local");
                         });
@@ -384,25 +398,25 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
                     alert("Gagal Menyimpan " + titledialog + " Ke Server");
                     $scope.loadingcontent = false;
                 });
-
+                
             }
         });
-
+   
     }
     //#####################################################################################################
     // START TAKE PICTURE FUNCTION
     //#####################################################################################################
     $scope.starttakeapicture = function()
     {
-        document.addEventListener("deviceready", function ()
+        document.addEventListener("deviceready", function () 
         {
             var options = $rootScope.getCameraOptions();
             $cordovaCamera.getPicture(options)
-            .then(function (imageData)
+            .then(function (imageData) 
             {
                 $scope.loadingcontent = true;
                 var timeimagestart = $filter('date')(new Date(),'yyyy-MM-dd HH:mm:ss');
-
+                
                 var gambarkunjungan={};
                 gambarkunjungan.ID_DETAIL           = ID_DETAIL;
                 gambarkunjungan.IMG_NM_START        = "gambar start";
@@ -420,7 +434,7 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
                     statusstartpicture.icon             = "fa fa-check bg-green";
                     $scope.statusstartpicture = statusstartpicture;
                     ngToast.create('Gambar Telah Berhasil Di Update');
-
+                    
                     var statuskunjungan = {};
                     statuskunjungan.START_PIC = 1;
 
@@ -428,8 +442,8 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
                     .then(function (data)
                     {
                         console.log(data);
-                    },
-                    function(err)
+                    }, 
+                    function(err) 
                     {
                         console.log("Gagal Update Status Start Picture");
                     });
@@ -437,17 +451,17 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
                     var updateSTSSTART_PIC  = 1;
                     var queryupdateagenda   = 'UPDATE Agenda SET STSSTART_PIC = ? WHERE ID_SERVER = ?';
                     $cordovaSQLite.execute($rootScope.db, queryupdateagenda, [updateSTSSTART_PIC,ID_DETAIL])
-                    .then(function(result)
+                    .then(function(result) 
                     {
                         console.log("Terimakasih. Agenda Start Pic Di Update Di Local");
                     },
-                    function(error)
+                    function(error) 
                     {
                         console.log("Agenda Start Pic Gagal Di Update Di Local: " + error.message);
                     });
                     $scope.loadingcontent = false;
-                },
-                function(err)
+                }, 
+                function(err) 
                 {
                     var statusstartpicture              = {};
                     statusstartpicture.bgcolor          = "bg-green";
@@ -473,8 +487,8 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
                         console.log("Gagal Menyimpan Gagal Check Ke Database Local");
                     });
                 });
-            },
-            function(err)
+            }, 
+            function(err) 
             {
                 $scope.loadingcontent = false;
             });
@@ -486,7 +500,7 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
     //#####################################################################################################
     $scope.endtakeapicture = function()
     {
-        document.addEventListener("deviceready", function ()
+        document.addEventListener("deviceready", function () 
         {
             var options = {
                 quality: 50,
@@ -500,9 +514,9 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
                 saveToPhotoAlbum: false,
                 correctOrientation:true
               };
-
+              
             $cordovaCamera.getPicture(options)
-            .then(function(imageData)
+            .then(function(imageData) 
             {
                 $scope.loadingcontent = true;
                 var timeimageend = $filter('date')(new Date(),'yyyy-MM-dd HH:mm:ss');
@@ -530,8 +544,8 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
                     .then(function (data)
                     {
                         console.log(data);
-                    },
-                    function(err)
+                    }, 
+                    function(err) 
                     {
                         console.log("Gagal Update Status End Picture Ke Server");
                     });
@@ -539,25 +553,25 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
                     var updateSTSEND_PIC  = 1;
                     var queryupdateagenda = 'UPDATE Agenda SET STSEND_PIC = ? WHERE ID_SERVER = ?';
                     $cordovaSQLite.execute($rootScope.db, queryupdateagenda, [updateSTSEND_PIC,ID_DETAIL])
-                    .then(function(result)
+                    .then(function(result) 
                     {
                         console.log("Terimakasih. Agenda End Pic Di Update Di Local");
                     },
-                    function(error)
+                    function(error) 
                     {
                         console.log("Agenda End Pic Gagal Di Update Di Local: " + error.message);
                     });
 
                     $scope.loadingcontent = false;
-                },
-                function (error)
+                }, 
+                function (error) 
                 {
                     $scope.loadingcontent = false;
                     var statusendpicture                = {};
                     statusendpicture.bgcolor            = "bg-green";
                     statusendpicture.icon               = "fa fa-check bg-green";
                     $scope.statusendpicture             = statusendpicture;
-
+                    
                     var newID_AGENDA         = ID_DETAIL;
                     var newUSER_ID           = auth.id;
                     var newID_CUSTOMER       = CUST_ID;
@@ -574,10 +588,10 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
                     function (error)
                     {
                         console.log("Gagal Menyimpan Gagal Check Ke Database Local");
-                    });
-                });
-            },
-            function(err)
+                    });   
+                }); 
+            }, 
+            function(err) 
             {
                 $scope.loadingcontent = false;
             });
@@ -597,17 +611,17 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
             confirmButtonColor: '#DD6B55',
             confirmButtonText: 'Yes',
             closeOnConfirm: true
-        },
-        function()
+        }, 
+        function() 
         {
             $scope.loadingcontent = true;
             GagalCheckSqliteServices.getGagalCheck(ID_DETAIL)
             .then (function (response)
             {
-                if (response.rows.length > 0)
+                if (response.rows.length > 0) 
                 {
                     var l = response.rows.length;
-                    for (var i=0; i < l; i++)
+                    for (var i=0; i < l; i++) 
                     {
                         var detail          = {};
                         detail.ID_AGENDA    = response.rows.item(i).ID_AGENDA;
@@ -652,14 +666,14 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
             {
                 console.log("Gagal Get Data Gagal Check Dari Local");
             });
-
+            
             GagalGambarSqliteServices.getGagalGambar(ID_DETAIL)
             .then (function (response)
             {
-                if (response.rows.length > 0)
+                if (response.rows.length > 0) 
                 {
                     var l = response.rows.length;
-                    for (var i=0; i < l; i++)
+                    for (var i=0; i < l; i++) 
                     {
                         var detail          = {};
                         detail.ID_AGENDA    = response.rows.item(i).ID_AGENDA;
@@ -690,7 +704,7 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
                         function (error)
                         {
                             console.log(error);
-                        });
+                        });     
                     }
                 }
                 else
@@ -727,7 +741,7 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
                 CheckOutService.updateCheckoutStatus($scope.idstatuskunjunganresponse,statuskunjungan)
                 .then(function(data,status)
                 {
-                  console.log(data);
+                  console.log(data);  
                 },
                 function (error)
                 {
@@ -746,14 +760,14 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
 
             var queryupdateagenda = 'UPDATE Agenda SET CHECKOUT_TIME = ?, STSCHECK_OUT = ? WHERE ID_SERVER = ?';
             $cordovaSQLite.execute($rootScope.db, queryupdateagenda, [updateCHECKOUT_TIME,updateSTSCHECK_OUT,ID_DETAIL])
-            .then(function(result)
+            .then(function(result) 
             {
                 console.log("Terimakasih. Agenda Check Out Berhasil Di Update Di Local");
             },
-            function(error)
+            function(error) 
             {
                 console.log("Update Agenda Check Out Gagal Di Update Di Local: " + error.message);
-            });
+            }); 
         });
     };
     //#####################################################################################################
@@ -839,7 +853,7 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
     //#####################################################################################################
     // EXPIRED FUNCTION
     //#####################################################################################################
-    $scope.showmodal = function(barang,index)
+    $scope.showmodal = function(barang,index) 
     {
         var jarak = $rootScope.jaraklokasi($scope.googlemaplong,$scope.googlemaplat,$scope.CUST_MAP_LNG,$scope.CUST_MAP_LAT);
         if(jarak > $scope.configjarak)
@@ -854,18 +868,18 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
             {
               templateUrl: "angular/partial/salesman/complexmodal.html",
               controller: "ComplexController",
-              inputs:
+              inputs: 
               {
                 title: barang.NM_BARANG
               }
             })
-            .then(function(modal)
+            .then(function(modal) 
             {
                 modal.element.modal(function ()
                 {
                     alert("Button OK Klick");
                 });
-                modal.close.then(function(result)
+                modal.close.then(function(result) 
                 {
                     $scope.loadingcontent = true;
                     var kodebarang     = barang.KD_BARANG;
@@ -878,7 +892,7 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
 
                         if(tanggalexpired != null && expiredqty != null)
                         {
-                            var tglexpd = $filter('date')(tanggalexpired,'yyyy-MM-dd');
+                            var tglexpd = $filter('date')(tanggalexpired,'yyyy-MM-dd'); 
 
                             var detailexpired = {};
                             detailexpired.ID_PRIORITASED    = prioritas;
@@ -896,7 +910,7 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
                             var config                      = expiredproduct.config;
 
                             $http.post(url + "/expiredproducts",serialized,config)
-                            .success(function(data,status,headers,config)
+                            .success(function(data,status,headers,config) 
                             {
                                 detailexpired.ID    = data.ID;
                                 ExpiredSqliteServices.setSqliteExpired(detailexpired)
@@ -908,14 +922,14 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
                                 {
                                     alert("Gagal Menimpan Data Expired Ke Local");
                                 });
-
+                                
                             })
                             .finally(function()
                             {
-                                $scope.loadingcontent = false;
+                                $scope.loadingcontent = false;  
                             });
 
-
+                             
                         }
                     }
                     ngToast.create("Expired Product Telah Diupdate");
@@ -926,11 +940,11 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
                         var updateSTSINVENTORY_EXPIRED      = 1;
                         var queryupdateagenda = 'UPDATE Agenda SET STSINVENTORY_EXPIRED = ? WHERE ID_SERVER = ?';
                         $cordovaSQLite.execute($rootScope.db, queryupdateagenda, [updateSTSINVENTORY_EXPIRED,ID_DETAIL])
-                        .then(function(result)
+                        .then(function(result) 
                         {
                             console.log("Terimakasih. Inventory Expired Berhasil Di Update Di Local");
                         },
-                        function(error)
+                        function(error) 
                         {
                             alert("Inventory Expired Gagal Di Update Di Local: " + error.message);
                         });
@@ -951,18 +965,18 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
                         var config                  = resultstatus.config;
 
                         $http.put(url + "/statuskunjungans/"+ idstatuskunjungan,serialized,config)
-                        .success(function(data,status, headers, config)
+                        .success(function(data,status, headers, config) 
                         {
                             ngToast.create('Status Inventory Expired Berhasil Di Update Di Server');
                         })
                         .finally(function()
                         {
-                            $scope.loadingcontent = false;
-                        });
+                            $scope.loadingcontent = false;  
+                        }); 
                     }
                 });
             });
-        }
+        }    
     };
     // ####################################################################################################
     // SUMMARY FUNCTION
@@ -1000,7 +1014,7 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
 }]);
 
 myAppModule.controller('ComplexController', ['$rootScope','$scope', '$http','$element', 'title', 'close',"$filter",
-function($rootScope,$scope, $http,$element, title, close,$filter)
+function($rootScope,$scope, $http,$element, title, close,$filter) 
 {
 
    $scope.title = title;
@@ -1018,10 +1032,10 @@ function($rootScope,$scope, $http,$element, title, close,$filter)
 
     var url = $rootScope.linkurl;
     $http.get(url + "/expiredpriorities/search?STATUS=1")
-    .success(function(data,status, headers, config)
+    .success(function(data,status, headers, config) 
     {
         $scope.list = [];
-        angular.forEach(data.ExpiredPrioritas, function(value, key)
+        angular.forEach(data.ExpiredPrioritas, function(value, key) 
         {
             var jangkawaktu = value.JANGKA_WAKTU;
             var nextMonth = new Date(myDate);
@@ -1038,13 +1052,13 @@ function($rootScope,$scope, $http,$element, title, close,$filter)
 
   // var tanggaled = $filter('date')(nextMonth,'yyyy-MM-dd');
   // $scope.list = [ {tanggaled:nextMonth1, expiredqty:null, prioritas:1},{tanggaled:nextMonth2, expiredqty:null,prioritas:2},{tanggaled:nextMonth3, expiredqty:null,prioritas:3} ];
-
-  $scope.close = function()
+  
+  $scope.close = function() 
   {
         close({list:$scope.list,title:$scope.title}, 500); // close, but give 500ms for bootstrap to animate
   };
 
-  $scope.cancel = function()
+  $scope.cancel = function() 
   {
     $element.modal('hide');
   };
