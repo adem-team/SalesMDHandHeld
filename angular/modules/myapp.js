@@ -8,41 +8,27 @@ myAppModule.run(["$rootScope","$http","$location","LocationService","$window","n
 function ($rootScope,$http,$location,LocationService,$window,ngToast,authService,$q,$filter,$cordovaDevice,$timeout,$templateCache,$cordovaNetwork,$cordovaSQLite) 
 {
 
-    if($window.localStorage.getItem('LocalStorageChekIn'))
-    {
-        var tanggalharini = $filter('date')(new Date(),'yyyy-MM-dd');
-        var LocalStorageChekIn = JSON.parse($window.localStorage.getItem('LocalStorageChekIn'));
-        if(LocalStorageChekIn.tanggalkunjungan != tanggalharini)
-        {
-            $window.localStorage.removeItem('LocalStorageChekIn');
-        }
-    }
-
-    if($window.localStorage.getItem('LSListHistory'))
-    {
-        var tanggalharini = $filter('date')(new Date(),'yyyy-MM-dd');
-        var LSListHistory = JSON.parse($window.localStorage.getItem('LSListHistory'));
-        if(LSListHistory.LSListHistoryTgl != tanggalharini)
-        {
-            $window.localStorage.removeItem('LSListHistory');
-        }
-    }
-    
-    if($window.localStorage.getItem('LSListAgenda'))
-    {
-        var tanggalharini = $filter('date')(new Date(),'yyyy-MM-dd');
-        var LSListAgenda = JSON.parse($window.localStorage.getItem('LSListAgenda'));
-        if(LSListAgenda.LSListAgendaTgl != tanggalharini)
-        {
-            $window.localStorage.removeItem('LSListAgenda');
-        }
-    }
-
     document.addEventListener("deviceready", function () 
     {
-        $rootScope.db = window.sqlitePlugin.openDatabase({name:"nextflow.db", location:'default'});
+        $rootScope.db = window.sqlitePlugin.openDatabase({name:"nextflow.db", location:'default', androidLockWorkaround: 1, androidDatabaseImplementation: 2});
         $cordovaSQLite.execute($rootScope.db, 'CREATE TABLE IF NOT EXISTS Messages (id INTEGER PRIMARY KEY AUTOINCREMENT, message TEXT)');
-    });
+        $cordovaSQLite.execute($rootScope.db, 'CREATE TABLE IF NOT EXISTS Agenda (id INTEGER PRIMARY KEY AUTOINCREMENT,ID_SERVER INTEGER,TGL TEXT, USER_ID INTEGER, CUST_ID TEXT, CUST_NM TEXT, LAG TEXT, LAT TEXT, MAP_LAT TEXT, MAP_LNG TEXT, CHECKIN_TIME TEXT,CHECKOUT_TIME TEXT,STSCHECK_IN INTEGER,STSCHECK_OUT INTEGER,STSINVENTORY_EXPIRED INTEGER,STSINVENTORY_SELLIN INTEGER,STSINVENTORY_SELLOUT INTEGER,STSINVENTORY_STOCK INTEGER,STSINVENTORY_REQUEST INTEGER,STSINVENTORY_RETURN INTEGER,STSSTART_PIC INTEGER,STSEND_PIC INTEGER,SCDL_GROUP INTEGER,STSISON_SERVER INTEGER)');
+        $cordovaSQLite.execute($rootScope.db, 'CREATE TABLE IF NOT EXISTS Absensi (ID INTEGER PRIMARY KEY AUTOINCREMENT, ID_SERVER INTEGER,TGL TEXT, USER_ID INTEGER, USER_NM TEXT, WAKTU_MASUK TEXT, WAKTU_KELUAR TEXT,STATUS_ABSENSI TEXT,ISON_SERVER INTEGER)');
+        
+        $cordovaSQLite.execute($rootScope.db, 'CREATE TABLE IF NOT EXISTS Scdlheader (ID INTEGER PRIMARY KEY AUTOINCREMENT, ID_SERVER INTEGER,TGL1 TEXT, SCDL_GROUP TEXT, USER_ID INTEGER, NOTE TEXT, STATUS_HEADER INTEGER)');
+        
+        $cordovaSQLite.execute($rootScope.db, 'CREATE TABLE IF NOT EXISTS Brgpenjualan (ID INTEGER PRIMARY KEY AUTOINCREMENT, ID_SERVER INTEGER,KD_BARANG TEXT, NM_BARANG TEXT, IMAGE_LOCAL TEXT, IMAGE_BASE64 TEXT)');
+        
+
+        $cordovaSQLite.execute($rootScope.db, 'CREATE TABLE IF NOT EXISTS Sot2 (ID INTEGER PRIMARY KEY AUTOINCREMENT, ISON_SERVER INTEGER,TGL TEXT,CUST_KD TEXT,CUST_NM TEXT,KD_BARANG TEXT,NM_BARANG TEXT,SO_QTY INTEGER,SO_TYPE INTEGER,POS TEXT,USER_ID INTEGER,STATUS INTEGER,WAKTU_INPUT_INVENTORY TEXT,ID_GROUP INTEGER,DIALOG_TITLE TEXT)');
+        
+
+        $cordovaSQLite.execute($rootScope.db, 'CREATE TABLE IF NOT EXISTS Sot2Type (ID INTEGER PRIMARY KEY AUTOINCREMENT, ID_SERVER INTEGER,SO_TYPE TEXT,UNTUK_DEVICE TEXT,STATUS INTEGER,SO_ID INTEGER,DIALOG_TITLE TEXT)');
+        
+        $cordovaSQLite.execute($rootScope.db, 'CREATE TABLE IF NOT EXISTS Configradius (ID INTEGER PRIMARY KEY AUTOINCREMENT, ID_SERVER INTEGER,CHECKIN TEXT,VALUERADIUS INTEGER,NOTE TEXT)');
+        
+        $cordovaSQLite.execute($rootScope.db, 'CREATE TABLE IF NOT EXISTS Expiredbarang (ID INTEGER PRIMARY KEY AUTOINCREMENT,ID_SERVER INTEGER,ID_PRIORITASED INTEGER,ID_DETAIL INTEGER,CUST_ID TEXT,BRG_ID TEXT,USER_ID TEXT,TGL_KJG TEXT,QTY INTEGER,DATE_EXPIRED TEXT,ISON_SERVER INTEGER)');
+   });
 
     document.addEventListener("deviceready", function () 
     {
@@ -52,43 +38,6 @@ function ($rootScope,$http,$location,LocationService,$window,ngToast,authService
         $rootScope.deviceversion    = $cordovaDevice.getVersion();
     }, false);
 
-    document.addEventListener("deviceready", function () 
-    {
-
-        var type = $cordovaNetwork.getNetwork();
-
-        $rootScope.isOnline = $cordovaNetwork.isOnline();
-
-        var isOffline = $cordovaNetwork.isOffline();
-
-        // listen for Online event
-        $rootScope.$on('$cordovaNetwork:online', function(event, networkState){
-          var onlineState = networkState;
-        })
-
-        // listen for Offline event
-        $rootScope.$on('$cordovaNetwork:offline', function(event, networkState){
-          var offlineState = networkState;
-        })
-
-    }, false);
-
-    $rootScope.onlineangular = navigator.onLine;
-    $window.addEventListener("offline", function() 
-    {
-        $rootScope.$apply(function() 
-        {
-            $rootScope.onlineangular = false;
-        });
-    }, false);
-
-    $window.addEventListener("online", function() 
-    {
-        $rootScope.$apply(function() 
-        {
-            $rootScope.onlineangular = true;
-        });
-    }, false);
 
     $rootScope.$on("$routeChangeStart", function (e, curr, prev,userInfo) 
     {
@@ -225,6 +174,7 @@ function ($rootScope,$http,$location,LocationService,$window,ngToast,authService
         
         return result;
     }
+    
     $rootScope.cekstatusbarang = function(statusvalue)
     {
         var status={};
@@ -243,8 +193,10 @@ function ($rootScope,$http,$location,LocationService,$window,ngToast,authService
 
         return status;
     }
+
     $rootScope.diffbarang = function(x,y)
     {
+
         var resultdiffsellin = [];
         angular.forEach(x, function(key) 
         {
@@ -378,6 +330,7 @@ function ($rootScope,$http,$location,LocationService,$window,ngToast,authService
         });
         return result;
     }
+    
     $rootScope.barangaksi = function(idcustomer,tanggalplan,sotype)
     {
         var dataproduct = $.ajax

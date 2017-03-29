@@ -25,26 +25,6 @@ myAppModule.config(['$routeProvider', function($routeProvider,$authProvider)
                 {
                     $location.path('/');
                 }
-            },
-            absen: function ($q, AbsensiService,$location,$filter) 
-            {
-                var LocalStorageAbsensi = AbsensiService.getLocalStorageAbsensi();
-                if(LocalStorageAbsensi)
-                {
-                   var tglhariini = $filter('date')(new Date(),'yyyy-MM-dd');
-                   if (LocalStorageAbsensi.AbsenTanggal == tglhariini) 
-                    {
-                        return $q.when(LocalStorageAbsensi);
-                    }
-                    else
-                    {
-                        $location.path('/absensi');
-                    } 
-                }
-                else 
-                {
-                    $location.path('/absensi');
-                }
             }
         }
     });
@@ -74,41 +54,22 @@ myAppModule.config(['$routeProvider', function($routeProvider,$authProvider)
                     $location.path('/');
                 }
             },
-            ResolveIdGroupCustomer: function (authService,JadwalKunjunganService,$route) 
+            resolvestatusabsensi: function($q,AbsensiSqliteServices,authService,$filter)
             {
-                var tanggalplan             = $route.current.params.idtanggal;
+                var tanggalplan             = $filter('date')(new Date(),'yyyy-MM-dd');
                 var userInfo                = authService.getUserInfo();
-                return JadwalKunjunganService.GetGroupCustomerByTanggalPlan(userInfo,tanggalplan);
+                var resolvestatusabsensi    = AbsensiSqliteServices.getAbsensiStatus(tanggalplan,userInfo.id);
+                return resolvestatusabsensi;
             },
-            absen: function ($q, AbsensiService,$location,$filter) 
+            resolveobjectbarangsqlite: function($q,ProductService)
             {
-                var LocalStorageAbsensi = AbsensiService.getLocalStorageAbsensi();
-                if(LocalStorageAbsensi)
-                {
-                   var tglhariini = $filter('date')(new Date(),'yyyy-MM-dd');
-                   if (LocalStorageAbsensi.AbsenTanggal == tglhariini) 
-                    {
-                        return $q.when(LocalStorageAbsensi);
-                    }
-                    else
-                    {
-                        alert("Absen Terlebih Dahulu");
-                        $location.path('/absensi');
-                    } 
-                }
-                else 
-                {
-                    alert("Absen Terlebih Dahulu");
-                    $location.path('/absensi');
-                }
+                var resultobjectbarangsqlite = ProductService.GetDataBarangsSqlite();
+                return $q.when(resultobjectbarangsqlite);
             },
-            agenda: function ($q, JadwalKunjunganService) 
+            resolvesot2type: function($q,SOT2Services)
             {
-                var LocalStorageAgenda = JadwalKunjunganService.getLocalStorageAgenda();
-                if(LocalStorageAgenda)
-                {
-                    return $q.when(LocalStorageAgenda.LSListAgenda);
-                }
+                var resultsot2type = SOT2Services.getSOT2Type();
+                return $q.when(resultsot2type);
             }
         }
     });
@@ -138,39 +99,16 @@ myAppModule.config(['$routeProvider', function($routeProvider,$authProvider)
                     $location.path('/');
                 }
             },
-            history: function ($q,JadwalKunjunganService) 
+            resolvestatusabsensi: function($q,AbsensiSqliteServices,authService,$filter)
             {
-                var LSListHistory = JadwalKunjunganService.getLocalStorageHistory();
-                if(LSListHistory)
-                {
-                    return $q.when(LSListHistory.LSListHistory);    
-                }
-            },
-            absen: function ($q, AbsensiService,$location,$filter) 
-            {
-                var LocalStorageAbsensi = AbsensiService.getLocalStorageAbsensi();
-                if(LocalStorageAbsensi)
-                {
-                   var tglhariini = $filter('date')(new Date(),'yyyy-MM-dd');
-                   if (LocalStorageAbsensi.AbsenTanggal == tglhariini) 
-                    {
-                        return $q.when(LocalStorageAbsensi);
-                    }
-                    else
-                    {
-                        alert("Absen Terlebih Dahulu");
-                        $location.path('/absensi');
-                    } 
-                }
-                else 
-                {
-                    alert("Absen Terlebih Dahulu");
-                    $location.path('/absensi');
-                }
+                var tanggalplan             = $filter('date')(new Date(),'yyyy-MM-dd');
+                var userInfo                = authService.getUserInfo();
+                var resolvestatusabsensi    = AbsensiSqliteServices.getAbsensiStatus(tanggalplan,userInfo.id);
+                return resolvestatusabsensi;
             }
         }
     });
-
+    
     $routeProvider.when('/detailjadwalkunjungan/:iddetailkunjungan',
     {
         templateUrl : 'angular/partial/salesman/detailjadwalkunjungan.html',
@@ -196,38 +134,72 @@ myAppModule.config(['$routeProvider', function($routeProvider,$authProvider)
                     $location.path('/');
                 }
             },
-            resolvegpslocation: function (LocationService) 
+            resolveconfigradiussqlite: function($q,ConfigradiusService)
             {
-                var resolvegpslocation = LocationService.GetGpsLocation();
-                return resolvegpslocation;
+                var resolveconfigradius = ConfigradiusService.getConfigradiusSqlite();
+                return $q.when(resolveconfigradius);
             },
-            resolvesingledetailkunjunganbyiddetail: function (singleapiService,$route) 
+            resolveobjectbarangsqlite: function($q,ProductService)
             {
-                var iddetailkunjungan             = $route.current.params.iddetailkunjungan;
-                var resolvesingledetailkunjunganbyiddetail = singleapiService.singledetailkunjunganbyiddetail(iddetailkunjungan);
-                return resolvesingledetailkunjunganbyiddetail;
+                var resultobjectbarangsqlite = ProductService.GetDataBarangsSqlite();
+                return resultobjectbarangsqlite;
             },
-            resolvedatabarangall: function(ProductService)
+            resolvesot2type: function($q,SOT2Services)
             {
-                var resolvedatabarang = ProductService.GetDataBarangs();
-                return resolvedatabarang;
+                var resultsot2type = SOT2Services.getSOT2Type();
+                return resultsot2type;
             },
-            resolveconfigradius: function($q,configurationService)
+            resolveagendabyidserver: function($q,AgendaSqliteServices,$route)
             {
-                var resolveconfigradius = configurationService.getConfigRadius();
-                return resolveconfigradius;
-            },
-            agenda: function ($q, JadwalKunjunganService) 
-            {
-                var LocalStorageAgenda = JadwalKunjunganService.getLocalStorageAgenda();
-                if(LocalStorageAgenda)
-                {
-                    return $q.when(LocalStorageAgenda.LSListAgenda);
-                }
+                var ID_SERVER              = $route.current.params.iddetailkunjungan;
+                var resultagendabyidserver = AgendaSqliteServices.getAgendaByIdServer(ID_SERVER);
+                return resultagendabyidserver;
             }
         }
     });
-
+    
+    $routeProvider.when('/outcase',
+    {
+        templateUrl : 'angular/partial/salesman/outcase.html',
+        controller  : 'OutCaseController',
+        resolve: 
+        {
+            auth: function ($q, authService,$location) 
+            {
+                var userInfo = authService.getUserInfo();
+                if(userInfo)
+                {
+                   if (userInfo.rulename === 'SALESMAN') 
+                    {
+                        return $q.when(userInfo);
+                    }
+                    else
+                    {
+                        $location.path('/error/404');
+                    } 
+                }
+                else 
+                {
+                    $location.path('/');
+                }
+            },
+            resolvestatusabsensi: function($q,AbsensiSqliteServices,authService,$filter)
+            {
+                var tanggalplan             = $filter('date')(new Date(),'yyyy-MM-dd');
+                var userInfo                = authService.getUserInfo();
+                var resolvestatusabsensi    = AbsensiSqliteServices.getAbsensiStatus(tanggalplan,userInfo.id);
+                return resolvestatusabsensi;
+            },
+            resolveagendatoday: function ($q, authService,AgendaSqliteServices,$filter) 
+            {
+                var tanggalplan              = $filter('date')(new Date(),'yyyy-MM-dd');
+                var userInfo                 = authService.getUserInfo();
+                var resolveagendatoday       = AgendaSqliteServices.getAgendaTodayForOutCase(tanggalplan,userInfo.id);
+                return resolveagendatoday;
+            }
+        }
+    });
+    
     $routeProvider.when('/home',
     {
         templateUrl : 'angular/partial/salesman/home.html',
@@ -396,107 +368,7 @@ myAppModule.config(['$routeProvider', function($routeProvider,$authProvider)
         }
     });
     
-    $routeProvider.when('/outcase',
-    {
-        templateUrl : 'angular/partial/salesman/outcase.html',
-        controller  : 'OutCaseController',
-        resolve: 
-        {
-            auth: function ($q, authService,$location) 
-            {
-                var userInfo = authService.getUserInfo();
-                if(userInfo)
-                {
-                   if (userInfo.rulename === 'SALESMAN') 
-                    {
-                        return $q.when(userInfo);
-                    }
-                    else
-                    {
-                        $location.path('/error/404');
-                    } 
-                }
-                else 
-                {
-                    $location.path('/');
-                }
-            }
-        }
-    });
-
-    $routeProvider.when('/detailjadwalkunjungan/:iddetailkunjungan',
-    {
-        templateUrl : 'angular/partial/salesman/detailjadwalkunjungan.html',
-        controller  : 'DetailJadwalKunjunganController',
-        resolve: 
-        {
-            auth: function ($q, authService,$location) 
-            {
-                var userInfo = authService.getUserInfo();
-                if(userInfo)
-                {
-                   if (userInfo.rulename === 'SALESMAN') 
-                    {
-                        return $q.when(userInfo);
-                    }
-                    else
-                    {
-                        $location.path('/error/404');
-                    } 
-                }
-                else 
-                {
-                    $location.path('/');
-                }
-            },
-            paksachekin: function ($q,$location,$route,$window,$filter) 
-            {
-                var iddetailkunjungan  = $route.current.params.iddetailkunjungan;
-                if($window.localStorage.getItem('my-storage'))
-                {
-                    var tglhariini = $filter('date')(new Date(),'yyyy-MM-dd');
-
-                    var xxx = JSON.parse($window.localStorage.getItem('my-storage'));
-                    if((iddetailkunjungan != xxx.iddetailkunjungan) && (tglhariini == xxx.tanggalkunjungan))
-                    {
-                        var tanggalkunjungan = $filter('date')(xxx.tanggalkunjungan,'dd-MM-yyyy');
-                        alert("Check Out Terlebih Dulu Dari " + xxx.namakustomer + " !");
-                        //sweetAlert("Oops", "Check Out Terlebih Dulu Dari " + xxx.namakustomer + " !", "error");
-                        $location.path('/agenda/' + $filter('date')(xxx.tanggalkunjungan,'yyyy-MM-dd'));
-                    }
-                }
-            },
-            resolvegpslocation: function (LocationService) 
-            {
-                var resolvegpslocation = LocationService.GetGpsLocation();
-                return resolvegpslocation;
-            },
-            resolvesingledetailkunjunganbyiddetail: function (singleapiService,$route) 
-            {
-                var iddetailkunjungan             = $route.current.params.iddetailkunjungan;
-                var resolvesingledetailkunjunganbyiddetail = singleapiService.singledetailkunjunganbyiddetail(iddetailkunjungan);
-                return resolvesingledetailkunjunganbyiddetail;
-            },
-            resolvedatabarangall: function(ProductService)
-            {
-                var resolvedatabarang = ProductService.GetDataBarangs();
-                return resolvedatabarang;
-            },
-            resolveconfigradius: function($q,configurationService)
-            {
-                var resolveconfigradius = configurationService.getConfigRadius();
-                return resolveconfigradius;
-            },
-            agenda: function ($q, JadwalKunjunganService) 
-            {
-                var LocalStorageAgenda = JadwalKunjunganService.getLocalStorageAgenda();
-                if(LocalStorageAgenda)
-                {
-                    return $q.when(LocalStorageAgenda.LSListAgenda);
-                }
-            }
-        }
-    });
+    
 
     $routeProvider.when('/dblocal',
     {

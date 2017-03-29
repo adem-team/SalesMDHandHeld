@@ -1,8 +1,8 @@
-myAppModule.controller("OutCaseController", ["$rootScope","$scope", "$location","$http","$filter","$timeout","$window","auth","CustomerService","OutCaseService","JadwalKunjunganService","authService",
-function ($rootScope,$scope, $location, $http,$filter,$timeout,$window,auth,CustomerService,OutCaseService,JadwalKunjunganService,authService)
+myAppModule.controller("OutCaseController", ["$rootScope","$scope", "$location","$http","$filter","$timeout","$window","auth","CustomerService","OutCaseService","JadwalKunjunganService","authService","$cordovaSQLite","resolvestatusabsensi","resolveagendatoday",
+function ($rootScope,$scope, $location, $http,$filter,$timeout,$window,auth,CustomerService,OutCaseService,JadwalKunjunganService,authService,$cordovaSQLite,resolvestatusabsensi,resolveagendatoday)
 {
     $scope.userInfo = auth;
-    $scope.loading  = true;
+    $scope.loadingcontent  = true;
     $scope.activeoutcase = "active";
 
     $scope.logout = function () 
@@ -11,34 +11,7 @@ function ($rootScope,$scope, $location, $http,$filter,$timeout,$window,auth,Cust
         $window.sessionStorage.clear();
         window.location.href = "index.html";
     }
-    // $scope.customergroup = function()
-    // {
-    //     $scope.loading  = true;
-    //     CustomerService.GetGroupCustomers()
-    //     .then(function (result) 
-    //     {
-    //         // $scope.customergroups = result.Customergroup;
-    //         var customergroups   = [];
-    //         _.each(result.Customergroup, function(executes) 
-    //         {
-    //             var customergroup = {};
-    //             customergroup.CREATE_AT = executes.CREATE_AT;
-    //             customergroup.CREATE_BY = executes.CREATE_BY;
-    //             customergroup.ID =executes.ID;
-    //             customergroup.KETERANGAN =executes.KETERANGAN;
-    //             customergroup.SCDL_GROUP_NM =executes.SCDL_GROUP_NM;
-    //             customergroup.STATUS =executes.STATUS;
-    //             customergroup.UPDATE_AT=executes.UPDATE_AT;
-    //             customergroup.UPDATE_BY=executes.UPDATE_BY;
-    //             customergroup.ALIAS = executes.KETERANGAN + " (" + executes.SCDL_GROUP_NM + ")";
-    //             customergroups.push(customergroup);
-    //         });
-    //         $scope.customergroups = customergroups;
-    //         $scope.loading  = false;
-    //         $scope.visible = false;  
-    //     });
-    // };
-    // $scope.customergroup();
+    
     authService.getManagers()
     .then (function (response)
     {
@@ -51,21 +24,25 @@ function ($rootScope,$scope, $location, $http,$filter,$timeout,$window,auth,Cust
 
     $scope.customergroupchange = function()
     {
-        $scope.loading  = true;
+        $scope.loadingcontent  = true;
         CustomerService.GetSingleGroupCustomer($scope.customer.ID)
         .then(function (result) 
         {
-            $scope.showcustomer = true;
-            $scope.showusers 	= true;
-            $scope.customers 	= result.Customer;
-            $scope.loading  	= false;
-            $scope.visible 		= false;
+            $scope.showcustomer           = true;
+            $scope.showusers 	          = true;
+            $scope.customers 	          = result.Customer;
+            $scope.loadingcontent  	      = false;
+            $scope.visible 		          = false;
+        },
+        function (error)
+        {
+            alert("Gagal Mendapat Group Customer Dari Server");
         });
     }
 
     $scope.getcustomers = function()
     {
-        $scope.loading  = true;
+        $scope.loadingcontent  = true;
         CustomerService.GetCustomers()
         .then(function (result) 
         {
@@ -84,7 +61,11 @@ function ($rootScope,$scope, $location, $http,$filter,$timeout,$window,auth,Cust
             });
             $scope.customeparents   = customerparents;
             $scope.customers        = customers;
-            $scope.loading  = false;
+            $scope.loadingcontent  = false;
+        },
+        function (error)
+        {
+            alert("Gagal Mendapatkan Customer Dari Server");
         });
     };
     $scope.getcustomers();
@@ -92,67 +73,133 @@ function ($rootScope,$scope, $location, $http,$filter,$timeout,$window,auth,Cust
     $scope.customerparentchange = function()
     {
         $scope.showcustomer = true;
-        $scope.loading      = false;
+        $scope.loadingcontent      = false;
         $scope.visible      = false;
     }
-    $scope.customerchange = function()
+    $scope.customerchange = function(customer)
     {
         $scope.showusers    = true;
-        $scope.loading      = false;
+        $scope.loadingcontent      = false;
         $scope.visible      = false;
     }
 
     $scope.submitForm = function(customer)
     {
-        console.log(customer);
-        $scope.loading = true;
-        $scope.isSubmitButtonDisabled = true;
-
-        
-        var tanggalsekarang = $filter('date')(new Date(),'yyyy-MM-dd');
-        JadwalKunjunganService.GetGroupCustomerByTanggalPlan(auth,tanggalsekarang)
-        .then(function(response)
+        if(resolvestatusabsensi.statusabsensi == 0)
         {
-            if(response.length == 0)
+            $scope.loadingcontent = true;
+            $scope.isSubmitButtonDisabled = true;
+
+            //Mencari Nama Customer Ketika Hanya Diketahui Kodenya Saja
+            //Penting Jangan Dihapus
+            var existingFilter = _.findWhere($scope.customers, { CUST_KD: customer.CUST_KD });
+
+            var tanggalsekarang = $filter('date')(new Date(),'yyyy-MM-dd');
+            JadwalKunjunganService.GetGroupCustomerByTanggalPlan(auth,tanggalsekarang)
+            .then(function(response)
             {
-                $scope.loading = false;
-                alert("Belum Ada Jadwal Kunjungan Anda Hari Ini");
-            }
-            else
-            {
-                var detail = {};
-                detail.TGL          = $filter('date')(new Date(),'yyyy-MM-dd')
-                detail.CUST_ID      = customer.CUST_KD;
-                detail.USER_ID      = auth.id;
-                detail.NOTE         = customer.MGRS;
-                detail.STATUS_CASE  = 1;
-                detail.CREATE_AT    = $filter('date')(new Date(),'yyyy-MM-dd HH:mm:ss');
-                detail.CREATE_BY    = auth.id;
-                detail.SCDL_GROUP   = response.SCDL_GROUP;
-                OutCaseService.SetOutOfCases(detail)
-                .then(function (result) 
+                if(response.length == 0)
                 {
-                    $timeout(function()
+                    $scope.loadingcontent = false;
+                    alert("Belum Ada Jadwal Kunjungan Anda Hari Ini");
+                }
+                else
+                {
+                    var detail = {};
+                    detail.TGL          = $filter('date')(new Date(),'yyyy-MM-dd')
+                    detail.CUST_ID      = customer.CUST_KD;
+                    detail.USER_ID      = auth.id;
+                    detail.NOTE         = customer.MGRS;
+                    detail.STATUS_CASE  = 1;
+                    detail.CREATE_AT    = $filter('date')(new Date(),'yyyy-MM-dd HH:mm:ss');
+                    detail.CREATE_BY    = auth.id;
+                    detail.SCDL_GROUP   = response.SCDL_GROUP;
+
+                    var existonagendalist = _.findWhere(resolveagendatoday, { CUST_ID: detail.CUST_ID });
+                    if(existonagendalist)
                     {
-                        var lanjutkeagenda = confirm("Out Case Berhasil Disimpan.Lanjut Ke Agenda?");
-                        if (lanjutkeagenda == true) 
+                        alert("Customer Sudah Ada Dalam List");
+                        $scope.loadingcontent = false;
+                        $scope.isSubmitButtonDisabled = false;
+                    }
+                    else
+                    {
+                        OutCaseService.SetOutOfCases(detail)
+                        .then(function (result) 
                         {
-                            $location.path("/agenda/" + tanggalsekarang);
-                        }
-                        else
+                            var newID_SERVER                = result.ID;
+                            var newTGL                      = tanggalsekarang;
+                            var newUSER_ID                  = auth.id;
+                            var newCUST_ID                  = result.CUST_ID;
+                            var newCUST_NM                  = existingFilter.CUST_NM;
+                            var newLAG                      = null;
+                            var newLAT                      = null;
+                            var newMAP_LAT                  = null;
+                            var newMAP_LNG                  = null;
+                            var newCHECKIN_TIME             = null;
+                            var newCHECKOUT_TIME            = null;
+
+                            var newSTSCHECK_IN              = 0;
+                            var newSTSCHECK_OUT             = 0;
+                            var newSTSINVENTORY_EXPIRED     = 0;
+                            var newSTSINVENTORY_SELLIN      = 0;
+                            var newSTSINVENTORY_SELLOUT     = 0;
+                            var newSTSINVENTORY_STOCK       = 0;
+                            var newSTSINVENTORY_REQUEST     = 0;
+                            var newSTSINVENTORY_RETURN      = 0;
+                            var newSTSSTART_PIC             = 0;
+                            var newSTSEND_PIC               = 0;
+                            var newSCDL_GROUP               = response.SCDL_GROUP;
+                            var newSTSISON_SERVER           = 1;
+
+                            var queryinsertagendatoday = 'INSERT INTO Agenda (ID_SERVER,TGL,USER_ID,CUST_ID,CUST_NM,LAG,LAT,MAP_LAT,MAP_LNG,CHECKIN_TIME,CHECKOUT_TIME,STSCHECK_IN,STSCHECK_OUT,STSINVENTORY_EXPIRED,STSINVENTORY_SELLIN,STSINVENTORY_SELLOUT,STSINVENTORY_STOCK,STSINVENTORY_REQUEST,STSINVENTORY_RETURN,STSSTART_PIC,STSEND_PIC,SCDL_GROUP,STSISON_SERVER) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
+                            $cordovaSQLite.execute($rootScope.db,queryinsertagendatoday,[newID_SERVER,newTGL,newUSER_ID,newCUST_ID,newCUST_NM,newLAG,newLAT,newMAP_LAT,newMAP_LNG,newCHECKIN_TIME,newCHECKOUT_TIME,newSTSCHECK_IN,newSTSCHECK_OUT,newSTSINVENTORY_EXPIRED,newSTSINVENTORY_SELLIN,newSTSINVENTORY_SELLOUT,newSTSINVENTORY_STOCK,newSTSINVENTORY_REQUEST,newSTSINVENTORY_RETURN,newSTSSTART_PIC,newSTSEND_PIC,newSCDL_GROUP,newSTSISON_SERVER])
+                            .then(function(result) 
+                            {
+                                console.log("Customer Untuk Out Of Case Berhasil Disimpan Di Local!");
+                            }, 
+                            function(error) 
+                            {
+                                alert("Customer Untuk Out Of Case Gagal Disimpan Ke Local: " + error.message);
+                            });
+
+                            $timeout(function()
+                            {
+                                var lanjutkeagenda = confirm("Out Case Berhasil Disimpan.Lanjut Ke Agenda?");
+                                if (lanjutkeagenda == true) 
+                                {
+                                    $location.path("/agenda/" + tanggalsekarang);
+                                }
+                                else
+                                {
+                                    var tambahcustkeresolveagenda = {};
+                                    tambahcustkeresolveagenda.CUST_ID = detail.CUST_ID;
+                                    tambahcustkeresolveagenda.CUST_NM = existingFilter.CUST_NM;
+                                    resolveagendatoday.push(tambahcustkeresolveagenda);
+                                    $scope.loadingcontent = false;
+                                    $scope.isSubmitButtonDisabled = false;
+                                }
+                                
+                            },2000);
+                        },
+                        function (error)
                         {
-                            $scope.loading = false;
-                            $scope.isSubmitButtonDisabled = false;
-                        }
-                        
-                    },2000);
-                },
-                function (error)
-                {
-                    alert("Out Case Gagal Ditambahkan");
-                }); 
-            }      
-        });
+                            alert("Out Case Gagal Ditambahkan");
+                            $scope.loadingcontent = false;
+                        }); 
+                    }
+                     
+                }      
+            });  
+        }
+        else if(resolvestatusabsensi.statusabsensi == 1)
+        {
+            alert("Sudah Absen Keluar.Tidak Bisa Lagi");
+        }
+        else
+        {
+            alert("Absen Masuk Terlebih Dahulu");
+        }   
     }
 
 }]);

@@ -25,7 +25,7 @@ function ($q,$rootScope,$scope, $location, $http,auth,$window,apiService,ngToast
         function(error) 
         {
             alert("Error on saving: " + error.message);
-        })
+        });
     }
 
     $scope.load = function() 

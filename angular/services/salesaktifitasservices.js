@@ -1,31 +1,31 @@
 'use strict';
-myAppModule.factory('SalesAktifitas', ["$rootScope","$http","$q","$filter","$window",
-function($rootScope,$http, $q, $filter, $window)
+myAppModule.factory('SalesAktifitas', ["$rootScope","$http","$q","$filter","$window","ProductService","SOT2Services",
+function($rootScope,$http, $q, $filter, $window, ProductService,SOT2Services)
 {
-	var getUrl = function()
-	{
-		return "http://api.lukisongroup.com/master";
-	}
-	var gettoken = function()
-	{
-		return "?access-token=azLSTAYr7Y7TLsEAML-LsVq9cAXLyAWa";
-	}
-    var getSalesAktifitas = function(CUST_ID,PLAN_TGL_KUNJUNGAN)
+    var getUrl = function()
+    {
+        return "http://api.lukisongroup.com/master";
+    }
+    var gettoken = function()
+    {
+        return "?access-token=azLSTAYr7Y7TLsEAML-LsVq9cAXLyAWa";
+    }
+    
+    var getSalesAktifitas = function(CUST_ID,PLAN_TGL_KUNJUNGAN,resolveobjectbarang,resolvesot2type)
     {
         var globalurl       = getUrl();
         var deferred        = $q.defer();
 
-        $http.get(globalurl + "/tipesalesaktivitas/search?UNTUK_DEVICE=ANDROID&STATUS=1")
-        .success(function(data,status, headers, config) 
+        var databarang = resolveobjectbarang;
+        var salesaktivitas = [];
+        var i = 0;
+        
+        angular.forEach(resolvesot2type, function(value, key)
         {
-            var x = data.Tipesalesaktivitas;
-            var salesaktivitas = [];
-            var i = 0;
-            angular.forEach(data.Tipesalesaktivitas, function(value, key)
+            SOT2Services.getSOT2Quantity(CUST_ID,PLAN_TGL_KUNJUNGAN,value.SO_ID)
+            .then (function (response)
             {
-                
-                var databarang = $rootScope.objectdatabarangs();
-                var barangaksi = $rootScope.barangaksi(CUST_ID,PLAN_TGL_KUNJUNGAN,value.SO_ID);
+                var barangaksi = response;
                 var diffbarangresult = [];
                 angular.forEach(barangaksi, function(value, key)
                 {
@@ -48,22 +48,79 @@ function($rootScope,$http, $q, $filter, $window)
                     status.show = true;
                 }
                 
-                x[i].products = diffbarang;  
+                resolvesot2type[i].products  = diffbarang;  
+                resolvesot2type[i].status    = status;
                 
-                x[i].status = status;
-                salesaktivitas.push(x[i]);
+                salesaktivitas.push(resolvesot2type[i]);
                 i = i + 1;
             });
-            deferred.resolve(salesaktivitas);
-        },
-        function (error)
-        {
-            deferred.rejected(error);
         });
+        deferred.resolve(salesaktivitas);
+
         return deferred.promise;
     }
-	return{
-            getSalesAktifitas:getSalesAktifitas
 
-		}
+    var setMemoSalesAktifitas = function(salesmanmemo)
+    {
+        var url = getUrl();
+        var deferred = $q.defer();
+
+        var result              = $rootScope.seriliazeobject(salesmanmemo);
+        var serialized          = result.serialized;
+        var config              = result.config;
+
+        $http.post(url + "/messageskunjungans",serialized,config)
+        .success(function(data,status, headers, config) 
+        {
+            var statusmemokunjungan                         = {};
+
+            statusmemokunjungan.bgcolor                     = "bg-green";
+            statusmemokunjungan.icon                        = "fa fa-check bg-green";
+            statusmemokunjungan.messageskunjungandisabled   = true;
+
+            deferred.resolve(statusmemokunjungan);
+        })
+        .error(function(err)
+        {
+            deferred.reject(err);
+        });
+
+        return deferred.promise;
+    }
+    
+    var getMemoSalesAktifitas = function(ID_DETAIL)
+    {
+        var url = getUrl();
+        var deferred = $q.defer();
+
+        $http.get(url + "/messageskunjungans/search?ID_DETAIL=" + ID_DETAIL)
+        .success(function(response,status, headers, config) 
+        {
+            if(angular.isDefined(response.statusCode))
+            {
+                deferred.resolve([]);
+            }
+            else
+            {
+                var statusmemokunjungan                         = {};
+                statusmemokunjungan.ISI_MESSAGES                = response.Messageskunjungan[0].ISI_MESSAGES;
+                statusmemokunjungan.bgcolor                     = "bg-green";
+                statusmemokunjungan.icon                        = "fa fa-check bg-green";
+                statusmemokunjungan.messageskunjungandisabled   = true;
+                deferred.resolve(statusmemokunjungan); 
+            }
+        })
+        .error(function(err)
+        {
+            deferred.reject(err);
+        });
+        
+        return deferred.promise;
+    }
+    
+    return{
+            getSalesAktifitas:getSalesAktifitas,
+            setMemoSalesAktifitas:setMemoSalesAktifitas,
+            getMemoSalesAktifitas:getMemoSalesAktifitas
+        }
 }]);

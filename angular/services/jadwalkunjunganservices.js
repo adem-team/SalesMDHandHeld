@@ -11,7 +11,8 @@ function($rootScope,$http, $q, $filter, $window,LocationService)
 	var gettoken = function()
 	{
 		return "?access-token=azLSTAYr7Y7TLsEAML-LsVq9cAXLyAWa";
-	}	
+	}
+    	
 	var GetListHistory = function(userinfo)
 	{
 		var iduser = userinfo.id;
@@ -31,13 +32,6 @@ function($rootScope,$http, $q, $filter, $window,LocationService)
             }
             else
             {
-                LSListHistory = 
-                {
-                    LSListHistoryTgl : tanggalsekarang,
-                    LSListHistory : response.JadwalKunjungan
-                }
-                var ListHistory = JSON.stringify(LSListHistory);
-                $window.localStorage.setItem('LSListHistory', ListHistory);
                 deferred.resolve(response.JadwalKunjungan); 
             }
 		})
@@ -92,7 +86,7 @@ function($rootScope,$http, $q, $filter, $window,LocationService)
         return deferred.promise;
     }
 
-	var GetSingleDetailKunjunganProsedur = function(userInfo,groupcustomer,tanggalplan)
+	var GetSingleDetailKunjunganProsedur = function(userInfo,groupcustomer,tanggalplan,gpslongitude,gpslatitude)
     {
         var globalurl = getUrl();
         var deferred = $q.defer();
@@ -101,10 +95,10 @@ function($rootScope,$http, $q, $filter, $window,LocationService)
         $http({method:method, url:url,cache:false})
         .success(function(response,status,headers,config) 
         {
-            console.log(headers());
+            // console.log(headers());
             if(angular.isDefined(headers()['last-modified']))
             {
-                alert("Dari Cache");
+                console.log("Dari Cache");
             }
 
             if(angular.isDefined(response.statusCode))
@@ -114,103 +108,81 @@ function($rootScope,$http, $q, $filter, $window,LocationService)
 
             else
             {
-                LocationService.GetGpsLocation()
-                .then(function(responsegps)
+                var customers = [];
+                angular.forEach(response.StatusKunjunganProsedur, function(value, key) 
                 {
-                    var customers = [];
-                    angular.forEach(response.StatusKunjunganProsedur, function(value, key) 
+                    var customer={};
+                    customer.ID               = value.ID;
+                    customer.CUST_ID          = value.CUST_ID;
+                    customer.CUST_NM          = value.CUST_NM;
+                    customer.MAP_LAT          = value.MAP_LAT;
+                    customer.MAP_LNG          = value.MAP_LNG;
+                    customer.TANGGAL          = tanggalplan;
+                    customer.CHECKIN_TIME     = $filter('date')(value.CHECKIN_TIME,'dd-MM-yyyy HH:mm:ss');
+                    customer.CHECKOUT_TIME    = $filter('date')(value.CHECKOUT_TIME,'dd-MM-yyyy HH:mm:ss');
+
+                    customer.STSSTART_PIC              = ((value.START_PIC == null         || value.START_PIC == 0) ? 0 : 1);
+                    customer.STSEND_PIC                = ((value.END_PIC == null           || value.END_PIC == 0) ? 0 : 1);
+                    customer.STSCHECK_IN               = ((value.CHECK_IN == null          || value.CHECK_IN == 0) ? 0 : 1);
+                    customer.STSCHECK_OUT              = ((value.CHECK_OUT == null         || value.CHECK_OUT == 0) ? 0 : 1);
+                    customer.STSINVENTORY_STOCK        = ((value.INVENTORY_STOCK == null   || value.INVENTORY_STOCK == 0) ? 0 : 1);
+                    customer.STSINVENTORY_SELLIN       = ((value.INVENTORY_SELLIN == null  || value.INVENTORY_SELLIN == 0) ? 0 : 1);
+                    customer.STSINVENTORY_SELLOUT      = ((value.INVENTORY_SELLOUT == null || value.INVENTORY_SELLOUT == 0) ? 0 : 1);
+                    customer.STSINVENTORY_EXPIRED      = ((value.INVENTORY_EXPIRED == null || value.INVENTORY_EXPIRED == 0) ? 0 : 1);
+                    customer.STSINVENTORY_REQUEST      = ((value.REQUEST == null           || value.REQUEST == 0) ? 0 : 1);
+                    customer.STSINVENTORY_RETURN       = 0;
+                    
+                    if(customer.STSCHECK_IN  == 0 || customer.STSCHECK_IN  == null)
                     {
-                        var customer={};
-                        customer.ID               = value.ID;
-                        customer.CUST_ID          = value.CUST_ID;
-                        customer.CUST_NM          = value.CUST_NM;
-                        customer.MAP_LAT          = value.MAP_LAT;
-                        customer.MAP_LNG          = value.MAP_LNG;
-                        customer.TANGGAL          = tanggalplan;
-                        customer.CHECKIN_TIME     = $filter('date')(value.CHECKIN_TIME,'dd-MM-yyyy HH:mm:ss');
-                        customer.CHECKOUT_TIME    = $filter('date')(value.CHECKOUT_TIME,'dd-MM-yyyy HH:mm:ss');
-
-                        customer.START_PIC              = ((value.START_PIC == null         || value.START_PIC == 0) ? 0 : 1);
-                        customer.END_PIC                = ((value.END_PIC == null           || value.END_PIC == 0) ? 0 : 1);
-                        customer.CHECK_IN               = ((value.CHECK_IN == null          || value.CHECK_IN == 0) ? 0 : 1);
-                        customer.CHECK_OUT              = ((value.CHECK_OUT == null         || value.CHECK_OUT == 0) ? 0 : 1);
-                        customer.INVENTORY_STOCK        = ((value.INVENTORY_STOCK == null   || value.INVENTORY_STOCK == 0) ? 0 : 1);
-                        customer.INVENTORY_SELLIN       = ((value.INVENTORY_SELLIN == null  || value.INVENTORY_SELLIN == 0) ? 0 : 1);
-                        customer.INVENTORY_SELLOUT      = ((value.INVENTORY_SELLOUT == null || value.INVENTORY_SELLOUT == 0) ? 0 : 1);
-                        customer.INVENTORY_EXPIRED      = ((value.INVENTORY_EXPIRED == null || value.INVENTORY_EXPIRED == 0) ? 0 : 1);
-
-                        
-                        if(customer.CHECK_IN  == 0 || customer.CHECK_IN  == null)
+                        customer.imagecheckout = "asset/admin/dist/img/normal.jpg";
+                    }
+                    else
+                    {
+                        if((customer.STSCHECK_OUT  == 1))
                         {
-                            customer.imagecheckout = "asset/admin/dist/img/normal.jpg";
+                            customer.imagecheckout = "asset/admin/dist/img/customer.jpg";
                         }
                         else
                         {
-                            if((customer.CHECK_OUT  == 1))
-                            {
-                                customer.imagecheckout = "asset/admin/dist/img/customer.jpg";
-                            }
-                            else
-                            {
-                                customer.imagecheckout = "asset/admin/dist/img/customerlogo.jpg";
-                            } 
-                        }
-
-                        var longitude1      = responsegps.longitude;
-                        var latitude1       = responsegps.latitude;
-                        
-                        var longitude2      = customer.MAP_LNG;
-                        var latitude2       = customer.MAP_LAT;
-                        
-                        
-                        var jarak           = $rootScope.jaraklokasi(longitude1,latitude1,longitude2,latitude2);
-                        //var roundjarak      = $filter('setDecimal')(jarak,0);
-                        if(jarak < 1000)
-                        {
-                            customer.JARAKMETER = $filter('setDecimal')(jarak,0) + " meter";
-                        }
-                        else
-                        {
-                            customer.JARAKMETER = $filter('setDecimal')(jarak/1000,1) + " km";
-                        }
-                        customer.JARAK            = $filter('setDecimal')(jarak/1000,0);
-
-
-                        var totalstatus = customer.START_PIC + customer.END_PIC + customer.INVENTORY_STOCK + customer.INVENTORY_SELLIN + customer.INVENTORY_SELLOUT + customer.INVENTORY_SELLOUT + customer.CHECK_IN + customer.CHECK_OUT;
-                        var persen = (totalstatus * 100)/8;
-                        customer.persen = persen;
-                        if(persen == 100)
-                        {
-                            customer.wanted = true;
-                        }
-                        customers.push(customer);
-                    });
-
-                    if(tanggalsekarang == tanggalplan)
-                    {
-                        LSListAgenda = 
-                        {
-                            LSListAgendaTgl     : tanggalsekarang,
-                            LSListAgenda        : customers
-                        }
-                        var ListAgenda = JSON.stringify(LSListAgenda);
-                        $window.localStorage.setItem('LSListAgenda', ListAgenda);
+                            customer.imagecheckout = "asset/admin/dist/img/customerlogo.jpg";
+                        } 
                     }
 
-                    deferred.resolve(customers);  
-                });  
+                    var longitude1      = gpslongitude;
+                    var latitude1       = gpslatitude;
+                    
+                    var longitude2      = customer.MAP_LNG;
+                    var latitude2       = customer.MAP_LAT;
+                    
+                    
+                    var jarak           = $rootScope.jaraklokasi(longitude1,latitude1,longitude2,latitude2);
+                    //var roundjarak      = $filter('setDecimal')(jarak,0);
+                    if(jarak < 1000)
+                    {
+                        customer.JARAKMETER = $filter('setDecimal')(jarak,0) + " meter";
+                    }
+                    else
+                    {
+                        customer.JARAKMETER = $filter('setDecimal')(jarak/1000,1) + " km";
+                    }
+                    customer.JARAK            = $filter('setDecimal')(jarak/1000,0);
+
+
+                    var totalstatus = customer.STSSTART_PIC + customer.STSEND_PIC + customer.STSINVENTORY_STOCK + customer.STSINVENTORY_SELLIN + customer.STSINVENTORY_SELLOUT + customer.STSINVENTORY_EXPIRED + customer.STSINVENTORY_REQUEST + customer.STSINVENTORY_RETURN + customer.STSCHECK_IN + customer.STSCHECK_OUT;
+                    var persen = (totalstatus * 100)/10;
+                    customer.persen = persen;
+                    if(persen == 100)
+                    {
+                        customer.wanted = true;
+                    }
+                    customers.push(customer);
+                });
+                deferred.resolve(customers);  
             }  
         })
         .error(function(err,status)
         {
-            if (status === 404)
-            {
-                deferred.resolve([]);
-            }
-            else    
-            {
-                deferred.reject(err);
-            }
+            deferred.reject(err);
         });
         return deferred.promise; 
     }
@@ -227,7 +199,7 @@ function($rootScope,$http, $q, $filter, $window,LocationService)
             console.log(headers());
             if(angular.isDefined(headers()['last-modified']))
             {
-                alert("Dari Cache");
+                console.log("Dari Cache");
             }
 
             if(angular.isDefined(response.statusCode))
@@ -268,35 +240,10 @@ function($rootScope,$http, $q, $filter, $window,LocationService)
         return deferred.promise; 
     }
 
-    function getLocalStorageHistory() 
-    {
-        return LSListHistory;
-    }
-
-    function getLocalStorageAgenda() 
-    {
-        return LSListAgenda;
-    }
-
-    function init() 
-    {
-        if ($window.localStorage.getItem('LSListHistory')) 
-        {
-            LSListHistory = JSON.parse($window.localStorage.getItem('LSListHistory'));
-        }
-        if ($window.localStorage.getItem('LSListAgenda')) 
-        {
-            LSListAgenda = JSON.parse($window.localStorage.getItem('LSListAgenda'));
-        }
-    }
-    init();
-
 	return{
 			GetListHistory:GetListHistory,
             GetGroupCustomerByTanggalPlan:GetGroupCustomerByTanggalPlan,
 			GetSingleDetailKunjunganProsedur:GetSingleDetailKunjunganProsedur,
-            GetJustStatusKunjungan:GetJustStatusKunjungan,
-            getLocalStorageHistory:getLocalStorageHistory,
-            getLocalStorageAgenda:getLocalStorageAgenda
+            GetJustStatusKunjungan:GetJustStatusKunjungan
 		}
 }]);
