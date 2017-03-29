@@ -28,6 +28,8 @@ function ($rootScope,$http,$location,LocationService,$window,ngToast,authService
         $cordovaSQLite.execute($rootScope.db, 'CREATE TABLE IF NOT EXISTS Configradius (ID INTEGER PRIMARY KEY AUTOINCREMENT, ID_SERVER INTEGER,CHECKIN TEXT,VALUERADIUS INTEGER,NOTE TEXT)');
         
         $cordovaSQLite.execute($rootScope.db, 'CREATE TABLE IF NOT EXISTS Expiredbarang (ID INTEGER PRIMARY KEY AUTOINCREMENT,ID_SERVER INTEGER,ID_PRIORITASED INTEGER,ID_DETAIL INTEGER,CUST_ID TEXT,BRG_ID TEXT,USER_ID TEXT,TGL_KJG TEXT,QTY INTEGER,DATE_EXPIRED TEXT,ISON_SERVER INTEGER)');
+
+        $cordovaSQLite.execute($rootScope.db, 'CREATE TABLE IF NOT EXISTS Lamakunjungan (ID INTEGER PRIMARY KEY AUTOINCREMENT,ID_AGENDA INTEGER,WAKTU_MASUK TEXT,WAKTU_KELUAR TEXT)');
    });
 
     document.addEventListener("deviceready", function () 
@@ -363,6 +365,23 @@ function ($rootScope,$http,$location,LocationService,$window,ngToast,authService
         var a = 0.5 - Math.cos(thetalat)/2 + Math.cos(latitude1 * Math.PI / 180) * Math.cos(latitude2 * Math.PI / 180) * (1 - Math.cos(thetalong))/2;
         var jarak = 12742 * Math.asin(Math.sqrt(a)) * 1000;
         return jarak;
+    }
+
+    $rootScope.convertwaktu = function(t)
+    {
+        var days, hours, minutes, seconds;
+        days = Math.floor(t / 86400);
+        t -= days * 86400;
+        hours = Math.floor(t / 3600) % 24;
+        t -= hours * 3600;
+        minutes = Math.floor(t / 60) % 60;
+        t -= minutes * 60;
+        seconds = t % 60;
+        return [
+                    hours + ' Jam',
+                    minutes + ' Menit',
+                    seconds + ' Detik'
+                ].join(' ');
     }
 
 }]);

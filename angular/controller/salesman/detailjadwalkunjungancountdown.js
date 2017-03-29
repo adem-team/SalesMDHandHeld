@@ -73,15 +73,20 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
     var tanggalsekarang         = $filter('date')(new Date(),'yyyy-MM-dd');
     var tanggalinventory        = $filter('date')(new Date(),'yyyy-MM-dd');
 
-    $scope.zoomvalue = 10;
-    var options = {maximumAge:Infinity,timeout:60000, enableHighAccuracy: false};
+    $scope.zoomvalue = 17;
     var geocoder = new google.maps.Geocoder;
-    LocationService.GetGpsLocation(options)
-    .then(function(data)
+
+    var options = {maximumAge: 3000,timeout: 5000, enableHighAccuracy: false};
+    navigator.geolocation.getCurrentPosition(function (result) 
     {
-    	$scope.googlemaplat   = data.latitude;
-    	$scope.googlemaplong  = data.longitude;
-    });
+        $scope.googlemaplat       = result.coords.latitude;
+        $scope.googlemaplong      = result.coords.longitude;
+    },
+    function(err)
+    {
+        alert("GPS Tidak Hidup.Hidupkan GPS Untuk Menikmati Fitur Ini");
+    },options);
+
 
     $scope.CUST_MAP_LAT                 = resolveagendabyidserver.MAP_LAT;
     $scope.CUST_MAP_LNG                 = resolveagendabyidserver.MAP_LNG;
@@ -102,45 +107,38 @@ function ($rootScope,$scope, $location, $http,auth,$window,$routeParams,NgMap,Lo
     LamaKunjunganSqliteServices.getLamaKunjungan(ID_DETAIL)
     .then (function (response)
     {
-    	if(response.length > 0)
-		{
-	    	var x                   = response[0].WAKTU_MASUK;
-	        var y                   = $filter('date')(response[0].WAKTU_KELUAR,'yyyy-MM-dd HH:mm:ss');
-	        var waktukeluar         = new Date(y);
-	        var tahun = waktukeluar.getFullYear();
-	        var bulan = waktukeluar.getMonth();
-	        var tanggal = waktukeluar.getDate();
-	        var jam		= waktukeluar.getHours();
-	        var menit	= waktukeluar.getMinutes();
-	        var detik	= waktukeluar.getSeconds();
-	 
-	        var future = new Date(tahun,bulan,tanggal,jam,menit,detik);
-	        console.log(future);
-	        var stopinterval = $interval(function () 
-	        {
-	            var diff;
-	            diff = Math.floor((future.getTime() - new Date().getTime()) / 1000);
-	            $scope.countdowns = $rootScope.convertwaktu(diff);
-	            if(diff < 1)
-	            {
-	                $scope.showbuttoncheckout = true;
-	            	$scope.stopFight();
-	                alert("Kamu Sudah Bisa Checkout");
-	            }
-	        }, 1000);
-	        $scope.stopFight = function() 
-	        {
-	            if (angular.isDefined(stopinterval)) 
-	            {
-	                $interval.cancel(stopinterval);
-	                stopinterval = undefined;
-	            }
-	        };
-		}
-    	else
-		{
-    		$scope.showbuttoncheckout = true;
-		}
+        alert("Sukses Load Lama Kunjungan");
+        var x                   = response[0].WAKTU_MASUK;
+        var y                   = $filter('date')(response[0].WAKTU_KELUAR,'yyyy-MM-dd HH:mm:ss');
+        var waktukeluar         = new Date(y);
+        var tahun = waktukeluar.getFullYear();
+        var bulan = waktukeluar.getMonth();
+        var tanggal = waktukeluar.getDate();
+        var jam		= waktukeluar.getHours();
+        var menit	= waktukeluar.getMinutes();
+        var detik	= waktukeluar.getSeconds();
+ 
+        var future = new Date(tahun,bulan,tanggal,jam,menit,detik);
+        console.log(future);
+        var stopinterval = $interval(function () 
+        {
+            var diff;
+            diff = Math.floor((future.getTime() - new Date().getTime()) / 1000);
+            $scope.countdowns = $rootScope.convertwaktu(diff);
+            if(diff < 1)
+            {
+                $scope.stopFight();
+                alert("Waktu Kunjungan Habis");
+            }
+        }, 1000);
+        $scope.stopFight = function() 
+        {
+            if (angular.isDefined(stopinterval)) 
+            {
+                $interval.cancel(stopinterval);
+                stopinterval = undefined;
+            }
+        };
     },
     function (error)
     {

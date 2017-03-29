@@ -139,7 +139,15 @@ function($rootScope,$http, $q, $filter, $window,$cordovaSQLite)
                     summary.CUST_KD             = result.rows.item(i).CUST_KD;
                     summary.CUST_NM             = result.rows.item(i).CUST_NM;
                     summary.SO_TYPE             = result.rows.item(i).SO_TYPE;
-                    summary.SO_QTY              = result.rows.item(i).SO_QTY;
+                    var checknegatif            = result.rows.item(i).SO_QTY;
+                    if(checknegatif < 0)
+                	{
+                    	summary.SO_QTY = 0;
+                	}
+                    else
+                	{
+                    	summary.SO_QTY = checknegatif;
+                	}
                     summary.DIALOG_TITLE        = result.rows.item(i).DIALOG_TITLE;
                     summarypercustomer.push(summary);
                 }
@@ -235,9 +243,16 @@ function($rootScope,$http, $q, $filter, $window,$cordovaSQLite)
                     summary.CUST_KD             = result.rows.item(i).CUST_KD;
                     summary.CUST_NM             = result.rows.item(i).CUST_NM;
                     summary.SO_TYPE             = result.rows.item(i).SO_TYPE;
-                    summary.SO_QTY              = result.rows.item(i).SO_QTY;
+                    var checknegatif            = result.rows.item(i).SO_QTY;
+                    if(checknegatif < 0)
+                	{
+                    	summary.SO_QTY = 0;
+                	}
+                    else
+                	{
+                    	summary.SO_QTY = checknegatif;
+                	}
                     summary.DIALOG_TITLE        = result.rows.item(i).DIALOG_TITLE;
-
                     summaryallcustomer.push(summary);
                 }
 

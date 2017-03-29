@@ -2,15 +2,15 @@
 /* global angular */
 'use strict';
 myAppModule.controller("LoginController", ["$rootScope","$scope", "$location", "$window", "authService","focus","$cordovaDevice",
-function ($rootScope,$scope, $location, $window,authService,focus,$cordovaDevice) 
+function ($rootScope,$scope, $location, $window,authService,focus,$cordovaDevice)
 {
     // http://stackoverflow.com/questions/14833326/how-to-set-focus-on-input-field
     // directive di file directives/numberonly.js
     focus('focusUsername');
     $scope.userInfo = null;
-    $scope.login = function (user) 
+    $scope.login = function (user)
     {
-        document.addEventListener("deviceready", function () 
+        document.addEventListener("deviceready", function ()
         {
             $scope.devicemodel      = $cordovaDevice.getModel();
             $scope.deviceplatform   = $cordovaDevice.getPlatform();
@@ -23,12 +23,12 @@ function ($rootScope,$scope, $location, $window,authService,focus,$cordovaDevice
         $scope.user = angular.copy(user);
     	var username = $scope.user.username;
     	var password	= $scope.user.password;
-        
+
 
         // authService.loginwithuuid(username, password,$scope.deviceuuid)
     	//authService.login(username, password,$scope.deviceuuid)
         authService.loginwithuuid(username, password,$scope.deviceuuid)
-        .then(function (result) 
+        .then(function (result)
         {
             if(result == "username_salah")
             {
@@ -55,9 +55,9 @@ function ($rootScope,$scope, $location, $window,authService,focus,$cordovaDevice
                 }
                 $scope.loading = false;
             }
-        }, 
-        function (err) 
-        {          
+        },
+        function (err)
+        {
             console.log(err);
             if(err == 'error uuid')
             {
@@ -70,7 +70,7 @@ function ($rootScope,$scope, $location, $window,authService,focus,$cordovaDevice
             {
                 alert("Password Salah");
                 $scope.user.password    = "";
-                focus('focusPassword'); 
+                focus('focusPassword');
             }
             else if(err == 'username_salah')
             {
@@ -86,10 +86,10 @@ function ($rootScope,$scope, $location, $window,authService,focus,$cordovaDevice
                 $scope.user.password    = "";
                 focus('focusUsername');
             }
-            
+
             //sweetAlert("Oops...", "Username Or Password Wrong", "error");
             $scope.loginLoading     = false;
-            $scope.disableInput     = false; 
+            $scope.disableInput     = false;
         });
     }
 }]);
